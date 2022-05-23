@@ -34,7 +34,7 @@ import sys
 
 from latexmlsuite import __version__
 
-MODES = ("all", "html", "tex", "clean")
+MODES = ("all", "html", "latex",  "clean", "xml")
 DEFAULT_MAIN = "main"
 DEFAULT_MODE = "all"
 
@@ -106,6 +106,10 @@ def parse_args(args):
         "--mode", help="Welke type document wil je maken?",
         choices=MODES, default=DEFAULT_MODE
     )
+    parser.add_argument(
+        "--no_overwrite", help="Schrijf de schoongemaakte html's naar een nieuwe file",
+        action="store_false", default=True, dest="overwrite"
+    )
     return parser.parse_args(args)
 
 
@@ -124,6 +128,7 @@ def setup_logging(loglevel):
 class LatexXMLSuite:
     def __init__(self,
                  main_file_name="main",
+                 overwrite=True,
                  bibtex_file=None,
                  output_directory=None,
                  output_directory_html=None,
@@ -142,6 +147,7 @@ class LatexXMLSuite:
         else:
             self.ccn_output_directory = Path("ccn")
         self.ccn_html_dir = self.ccn_output_directory / Path("html")
+        self.overwrite = overwrite
         self.ccn_tables_dir = self.ccn_output_directory / Path("tables")
         self.ccn_highcharts_dir = self.ccn_output_directory / Path("highcharts")
         self.makefile_directories = makefile_directories
@@ -155,14 +161,14 @@ class LatexXMLSuite:
         self.bibtex_file = bibtex_file
 
         if output_directory is None:
-            self.output_dirctory = Path("out")
+            self.output_directory = Path("out")
         else:
-            self.output_dirctory = Path(output_directory)
+            self.output_directory = Path(output_directory)
 
         if output_directory_html is None:
-            self.output_dirctory_html = Path("out_html")
+            self.output_directory_html = Path("out_html")
         else:
-            self.output_dirctory_html = Path(output_directory_html)
+            self.output_directory_html = Path(output_directory_html)
 
         self.xml_refs = None
         self.merge_chapters = merge_chapters
@@ -177,16 +183,17 @@ class LatexXMLSuite:
         if self.makefile_directories is not None:
             self.launch_makefiles()
 
-        if self.mode in ("clean", "latexmk"):
+        if self.mode in ("clean", "latex", "all"):
             self.launch_latexmk()
-        elif self.mode == "html":
+        if self.mode in ("xml", "all"):
             self.launch_latexmk_for_html()
             self.copy_pdf()
             if self.bibtex_file is not None:
                 self.launch_latexml_bibtex()
             self.launch_latexml()
+        if self.mode in ("html", "all"):
             self.launch_latexml_post()
-            self.rename_html()
+            self.rename_and_clean_html()
             self.clean_ccs()
 
     def clean_ccs(self):
@@ -207,7 +214,10 @@ class LatexXMLSuite:
 
             run_command(command=rm)
 
-    def rename_html(self):
+    def rename_and_clean_html(self):
+        """
+        Hernoem alle html files met een prefix
+        """
         html_files = glob.glob(f"{self.ccn_html_dir.as_posix()}/*.html")
         for html_file in html_files:
             html = Path(html_file)
@@ -233,7 +243,21 @@ class LatexXMLSuite:
 
             run_command(command=move)
 
+            cleaner = []
+            if self.test:
+                cleaner.append("echo")
+            cleaner.append("htmlcleaner")
+            cleaner.append(new_html.as_posix())
+
+            if self.overwrite:
+                cleaner.append("--overwrite")
+
+            run_command(command=cleaner)
+
     def launch_makefiles(self):
+        """
+        Loop over alle directories die een Makefile bevatten en lanceer het make commando
+        """
 
         for makefile_dir in self.makefile_directories:
             cmd = []
@@ -246,12 +270,15 @@ class LatexXMLSuite:
                 run_command(command=cmd)
 
     def launch_latexmk_for_html(self):
+        """
+        Run latexmk voor de tex file in de html output directory
+        """
         cmd = []
 
         if self.test:
             cmd.append("echo")
 
-        out_dir = Path(self.output_dirctory_html)
+        out_dir = Path(self.output_directory_html)
         out_dir.mkdir(exist_ok=True)
         main_file = out_dir / Path(self.main_file_name)
         cmd.append("latexmk")
@@ -281,10 +308,15 @@ class LatexXMLSuite:
         run_command(command=cmd)
 
     def copy_pdf(self):
-        out_dir = Path(self.output_dirctory_html)
+        """
+        Kopieer de volledige pdf voor ccn (dus met de plaatjes)
+        """
+        out_dir = Path(self.output_directory)
         main_file = out_dir / Path(self.main_file_name)
 
         pdf_file = main_file.with_suffix(".pdf")
+        if not pdf_file.exists():
+            self.launch_latexmk()
         ccn_pdf = self.ccn_output_directory / Path(self.output_filename)
 
         time0 = datetime.datetime.fromtimestamp(pdf_file.stat().st_mtime, tz=datetime.timezone.utc)
@@ -320,7 +352,7 @@ class LatexXMLSuite:
 
         cmd.append("latexml")
         references = self.bibtex_file
-        self.xml_refs = self.output_dirctory_html / Path(references + ".xml")
+        self.xml_refs = self.output_directory_html / Path(references + ".xml")
         cmd.append(f"--dest={self.xml_refs.as_posix()}")
         cmd.append(f"--preload=hyperref.sty")
         cmd.append(f"{references}")
@@ -334,7 +366,7 @@ class LatexXMLSuite:
 
         cmd.append("latexml")
 
-        out_dir = Path(self.output_dirctory_html)
+        out_dir = Path(self.output_directory_html)
         main_file = out_dir / Path(self.main_file_name)
         xml_file = main_file.with_suffix(".xml")
 
@@ -351,7 +383,7 @@ class LatexXMLSuite:
 
         cmd.append("latexmlpost")
 
-        out_dir = self.output_dirctory_html
+        out_dir = self.output_directory_html
         main_file = out_dir / Path(self.main_file_name)
         html_file = self.ccn_html_dir / Path(main_file.stem).with_suffix(".html")
         self.ccn_html_dir.mkdir(exist_ok=True, parents=True)
@@ -370,7 +402,7 @@ class LatexXMLSuite:
 
         run_command(command=cmd)
 
-    def launch_latexmk(self, output_directory=None):
+    def launch_latexmk(self):
 
         cmd = []
 
@@ -379,14 +411,12 @@ class LatexXMLSuite:
             cmd.append("echo")
 
         cmd.append("latexmk")
-        cmd.append(f"-output-directory={output_directory.as_posix()}")
+        cmd.append(f"-output-directory={self.output_directory.as_posix()}")
 
-        if self.mode in ("all", "html"):
+        if self.mode in ("latex", "all"):
             cmd.append(f"{main_base}.tex")
             cmd.append("-xelatex")
             cmd.append("-shell-escape")
-            if self.mode == "html":
-                self.clone_main()
 
         elif self.mode == "clean":
             cmd.append("-c")
@@ -465,6 +495,7 @@ def main(args):
 
     suite = LatexXMLSuite(mode=args.mode,
                           test=args.test,
+                          overwrite=args.overwrite,
                           main_file_name=settings.main_name,
                           bibtex_file=settings.bibtex_file,
                           output_directory=settings.output_directory,
