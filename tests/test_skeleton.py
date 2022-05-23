@@ -1,6 +1,6 @@
 import pytest
 
-from latexmlsuite.skeleton import fib, main
+from latexmlsuite.main_suite import fib, main
 
 __author__ = "Eelco van Vliet"
 __copyright__ = "Eelco van Vliet"
