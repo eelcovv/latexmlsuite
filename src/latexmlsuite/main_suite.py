@@ -22,20 +22,18 @@ References:
 
 import argparse
 import codecs
-import os
-
-import random
-import string
-import yaml
-import glob
-import re
-from pathlib import Path
 import datetime
-import path
+import glob
+import logging
+import os
+import re
 import shutil
 import subprocess
-import logging
 import sys
+from pathlib import Path
+
+import path
+import yaml
 
 from latexmlsuite import __version__
 
