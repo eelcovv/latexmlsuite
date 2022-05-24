@@ -2,6 +2,12 @@
 Changelog
 =========
 
+Version 0.2
+===========
+
+- Werkend voorbeeld onder examples toegevoegd
+- check update toegevoegd
+
 Version 0.1
 ===========
 
