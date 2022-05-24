@@ -5,6 +5,8 @@
   Zorg dat latex2cnn in je pad staat en je miktex geinstalleerd hebt
 .PARAMETER script_name
     Naam van het lanceerscript.
+.PARAMETER make_exe
+    Naam van de make executabel. Default = make
 .PARAMETER settings_file
     Naam van de settings file. Default is 'rapport_settings.yml', dus je mag het ook weglaten
 .PARAMETER help
@@ -37,6 +39,7 @@ param (
     [switch]$dryrun = $false,
     [switch]$help = $false,
     [ValidateSet('all', 'latex', 'xml', 'html')]
+    [string]$make_exe="make",
     [string]$mode="all"
 )
 
@@ -55,6 +58,7 @@ $cmd="$script_name
       --settings_filename $settings_file
       $dryrun_optie
       --mode $mode
+      --make_exe $make_exe
 "
 $cmd = $cmd -replace '\s+', ' '
 Write-Output "Start script..."
