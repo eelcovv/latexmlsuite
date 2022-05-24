@@ -267,6 +267,12 @@ class LaTeXMLSuite:
 
     def clean_ccs(self):
 
+        pattern = f"{self.ccn_html_dir.as_posix()}/*.css"
+        css_files = glob.glob(pattern)
+        if len(css_files) == 0:
+            _logger.debug("No css files found.")
+            return
+
         rm = []
         if self.test:
             rm.append("echo")
@@ -275,13 +281,20 @@ class LaTeXMLSuite:
             rm.append("Remove-Item")
             rm.append("-recurse")
             rm.append("-force")
+            rm.append(pattern)
         else:
             rm.append("rm")
             rm.append("-v")
-        rm.append(f"{self.ccn_html_dir.as_posix()}/*.css")
+            for file in css_files:
+                rm.append(file)
         run_command(rm)
 
     def clean_log(self):
+        pattern = f"*.css"
+        log_files = glob.glob(pattern)
+        if len(log_files) == 0:
+            _logger.debug("No log files found.")
+            return
 
         rm = []
         if self.test:
@@ -291,10 +304,13 @@ class LaTeXMLSuite:
             rm.append("Remove-Item")
             rm.append("-recurse")
             rm.append("-force")
+            rm.append(pattern)
         else:
             rm.append("rm")
             rm.append("-v")
-        rm.append(f"*.log")
+            for file in log_files:
+                rm.append(file)
+
         run_command(rm)
 
     def rename_and_clean_html(self):
