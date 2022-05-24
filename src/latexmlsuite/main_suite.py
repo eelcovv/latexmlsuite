@@ -161,7 +161,7 @@ def copy_main_for_latexml(tex_input_file: Path, tex_output_file: Path,
     _logger.debug(f"Writing {tex_output_file}")
 
     options = ""
-    if not include_graphs:
+    if not include_graphics:
         options += "nographs,notables,nohyperrefs"
     else:
         options += "nohyperrefs"
