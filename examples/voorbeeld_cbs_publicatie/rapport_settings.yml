@@ -1,0 +1,14 @@
+# maak de kopij aan de hand van deze settings door te runnen:
+# latex2ccn
+general:
+  latex_main: main.tex
+  bibtex_file: references.bib
+  output_filename: voorbeeld_publicatie.pdf
+  ccn_output_directory: ccn
+  merge_html: false
+makefile_directories:
+  - "figures/iris"
+  - "figures/iris_via_hc"
+cache:
+  output_directory: out
+  output_html_directory: out_html

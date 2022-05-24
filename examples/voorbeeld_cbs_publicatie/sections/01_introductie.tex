@@ -1,0 +1,38 @@
+\chapter{Introductie}
+\label{ch:introductie}
+
+
+\section{Voorbeelden die besproken worden}
+Dit document kan gebruikt worden als opstart document voor een CBS-publicatie die je aan CCN kan
+aanleveren.
+
+In hoofdstuk~\ref{ch:voorbeelden}  zullen wat elementen van \LaTeX laten zien.
+In sectie~\ref{sec:basis_environment} laten we bullet lijsten zien.
+Hoe je een highcharts of python plaatje kan toevoegen wordt in sectie~\ref{sec:plaatje_toevoegen}
+laten zien.
+Het highcharts plaatje komt in sectie~\ref{subsec:plaatje_highcharts} aan bod, terwijl we het
+plaatje gemaakt met Python in sectie~\ref{subsec:plaatje_python} behandelen.
+
+We kunnen ook tabellen in CBS-formaat toevoegen, wat in sectie~\ref{sec:tabel} besproken wordt.
+
+Ten slotte laten we in de appendix~\ref{ch:extra} zien hoe je met Makefiles werkt.
+
+De~\href{https://github.cbsp.nl/EVLT/cybersecuritymonitor-2020}{Cybersecuritymonitor 2020}
+\citep{cybersecuritymonitor_20} is de eerste officiële CBS-publicatie waarbij
+deze conversie methode vanuit \LaTeX toegepast is.
+De broncode staat ook op de intern~\href{https://github/evlt/cybersecuritymonitor}{CBS github}
+\citep{cybersecuritymonitor_20_github}.
+
+De conversie van latex naar html wordt gedaan met het LatexXML~\citep{latexml}, een open-source
+software tool.
+De html-bestanden die \emph{latexml} genereert, proberen zo nauwkeurig mogelijk het oorspronkelijk
+\LaTeX document na te bootsen, zodat er allerlei stijlelementen aan de html's toegevoegd worden.
+Voor de levering aan CCN is het juist nodig om een zo'n leeg mogelijk html aan te leveren.
+Het opschonen van de html-bestanden gaat met
+\emph{latexml2sitescore}~\citep{latexmlsitescore_github}, een intern ontwikkelde Python tool.
+
+Als je nog nieuw bent met Latex: meer achtergrondinformatie kan je vinden in
+\emph{The Not So Short Introduction to \LaTeX}~\citep{latexnottooshort}.
+
+
+

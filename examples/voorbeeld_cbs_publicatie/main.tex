@@ -1,0 +1,56 @@
+%! suppress = MissingImport
+%! Compiler = xelatex --shell-escape
+%! BibTex Compiler = bibtex
+\RequirePackage{ifpdf}
+\documentclass[dutch,
+    publicatie,
+    bibtex,
+    iconcode=01C,
+    iconcolor=donkerblauw,
+    iconcolorsecundary=white,
+]{cbsdocs}
+
+\usepackage{siunitx}
+\usepackage{blindtext}
+
+% de title geef je op met MainTitle{Lange title}[Lange][titel]
+% De titel tussen de {} is de volledige titel, terwijl de titel nogmaals tussen de [][] gegeven
+% wordt,  dit keer opgeknipt per regel
+\MainTitle{Voorbeeld van een CBS-publicatie}[Voorbeeld van een][CBS-publicatie]
+\author{}
+\AdresDenHaag
+\date{}
+
+\PublicatieJaar{2021}
+
+% de embargodatumtijd wordt gebruikt als je bij de 'documentclass' opties 'embargo' meegeeft
+\EmbargoDatumTijd{7-5-2021 00:00}
+
+% in hyphennation kan je lange woorden opgeven met hun afbreekstreepjes in het geval het mis gaat
+\hyphenation{cybersecurity-monitor onderhouds-boekje}
+
+\begin{document}
+    \beforepreface % make title, page with colofon, verklaring
+    % hier kan je eventeel nog een voorwoord sectie toevoegen
+    %\prefacesection{Voorwoord} % voorwoord sectie
+    %\input{sections/voorwoord}
+    \afterpreface % schakel de chapterpage in
+
+    % hier voeg je per hoofdstuk een link naar de '.tex' files onder sections toe.
+    % Merk op dat dit niet verplicht is, maar het helpt wel om structuur aan te brengen.
+    % Bovendien kan je makkelijk file uitcommentarieren
+    % Met '\input' laad je de inhoud van de .tex file op dit punt, alsof je het hier direct
+    % ingevoerd had.
+    \input{sections/01_introductie}
+    \input{sections/02_latex_voorbeelden}
+    \input{sections/03_conclusies.tex}
+%%
+    \printbibliography
+
+    \appendix
+
+    \input{sections/A_tabellen}
+    \clearpage
+
+
+\end{document}
