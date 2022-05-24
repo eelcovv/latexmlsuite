@@ -176,7 +176,7 @@ def copy_main_for_latexml(tex_input_file: Path, tex_output_file: Path,
         out_stream.write(tex_content_new)
 
 
-class LatexXMLSuite:
+class LaTeXMLSuite:
     def __init__(self,
                  main_file_name="main",
                  make_exe="make",
@@ -540,19 +540,19 @@ def main(args):
     _logger.debug("Start here")
     settings.report_settings()
 
-    suite = LatexXMLSuite(mode=args.mode,
-                          test=args.test,
-                          mak_exe=args.mak_exe,
-                          overwrite=args.overwrite,
-                          main_file_name=settings.main_name,
-                          bibtex_file=settings.bibtex_file,
-                          output_directory=settings.output_directory,
-                          output_directory_html=settings.output_directory_html,
-                          output_filename=settings.output_filename,
-                          ccn_output_directory=settings.ccn_output_directory,
-                          makefile_directories=settings.makefile_directories,
-                          include_graphs=args.include_graphs,
-                          )
+    suite = LaTeXMLSuite(mode=args.mode,
+                         test=args.test,
+                         make_exe=args.mak_exe,
+                         overwrite=args.overwrite,
+                         main_file_name=settings.main_name,
+                         bibtex_file=settings.bibtex_file,
+                         output_directory=settings.output_directory,
+                         output_directory_html=settings.output_directory_html,
+                         output_filename=settings.output_filename,
+                         ccn_output_directory=settings.ccn_output_directory,
+                         makefile_directories=settings.makefile_directories,
+                         include_graphs=args.include_graphs,
+                         )
 
     suite.run()
 
