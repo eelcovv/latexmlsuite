@@ -218,6 +218,7 @@ class LatexXMLSuite:
             self.output_directory_html = Path(output_directory_html)
 
         self.xml_refs = None
+        self.updated_references = False
         self.merge_chapters = merge_chapters
 
         if mode is None:
@@ -390,8 +391,10 @@ class LatexXMLSuite:
             cmd.append(f"{references}")
 
             run_command(command=cmd)
+            self.updated_references = True
         else:
             _logger.debug(f"No update need for {self.xml_refs} compared to {references}")
+            self.updated_references = False
 
     def launch_latexml(self):
         cmd = []
@@ -408,7 +411,7 @@ class LatexXMLSuite:
         cmd.append(f"--dest={xml_file.as_posix()}")
         cmd.append(f"{main_file.as_posix()}")
 
-        if update_target_compared_to_source(main_file, xml_file):
+        if update_target_compared_to_source(main_file, xml_file) or self.updated_references:
             run_command(command=cmd)
         else:
             _logger.debug(f"No update need for {xml_file} compared to {main_file}")
