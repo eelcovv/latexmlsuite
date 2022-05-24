@@ -16,11 +16,12 @@
 .PARAMETER dryrun
     Laat alleen de commandos zien die aangeroepen worden zonder ze uit te voeren
 .PARAMETER mode
-    Geef de modus van het script. Geldig zijn 'all', 'latex', 'xml' of 'html'. Default = 'all'
+    Geef de modus van het script. Geldig zijn 'all', 'latex', 'xml', 'html' of 'none'. Default = 'all'
     all:   doorloop alle stappen.
     latex: maak alleen de latex pdf
     xml: maak alleen de xml vanuit de tex files. Langzame stap
     html: converteer de xml naar html
+    none: doe niks, maar run alleen de makefiles
 .EXAMPLE
     maak_ccn_kopij.ps1
     Doorloop alle stappen om de kopij te maken
