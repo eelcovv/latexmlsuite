@@ -22,12 +22,17 @@ References:
 
 import argparse
 import codecs
+import os
+
+import random
+import string
 import yaml
 import glob
 import re
 from pathlib import Path
 import datetime
 import path
+import shutil
 import subprocess
 import logging
 import sys
@@ -261,22 +266,20 @@ class LaTeXMLSuite:
             self.clean_ccs()
 
     def clean_ccs(self):
-        css_files = glob.glob(f"{self.ccn_html_dir.as_posix()}/*.css")
-        for css_file in css_files:
-            css = Path(css_file)
-            rm = []
-            if self.test:
-                rm.append("echo")
-            if "win" in sys.platform.lower():
-                rm.append("Del")
-            else:
-                rm.append("rm")
 
+        rm = []
+        if self.test:
+            rm.append("echo")
+        if "win" in sys.platform.lower():
+            rm.append("powershell.exe")
+            rm.append("Remove-Item")
+            rm.append("-recurse")
+            rm.append("-force")
+        else:
+            rm.append("rm")
             rm.append("-v")
-
-            rm.append(f"{css.as_posix()}")
-
-            run_command(command=rm)
+        rm.append(f"{self.ccn_html_dir.as_posix()}/*.css")
+        run_command(rm)
 
     def rename_and_clean_html(self):
         """
@@ -289,27 +292,16 @@ class LaTeXMLSuite:
             if html.stem.startswith(self.main_file_name.stem):
                 continue
 
-            move = []
-            if self.test:
-                move.append("echo")
-            if "win" in sys.platform.lower():
-                move.append("Move-Item.exe")
-            else:
-                move.append("mv")
-
-            move.append("-v")
-
             prefix = self.main_file_name.stem
             new_base = "_".join([prefix, html.stem + html.suffix])
             new_html = html.parent / Path(new_base)
-            move.append(html.as_posix())
-            move.append(new_html.as_posix())
 
-            run_command(command=move)
+            shutil.move(html.as_posix(), new_html.as_posix())
 
             cleaner = []
             if self.test:
                 cleaner.append("echo")
+
             cleaner.append("htmlcleaner")
             cleaner.append(new_html.as_posix())
 
@@ -375,19 +367,7 @@ class LaTeXMLSuite:
         update_pdf = update_target_compared_to_source(pdf_file, ccn_pdf)
 
         if update_pdf:
-            copy = []
-            if self.test:
-                copy.append("echo")
-
-            if "win" in sys.platform.lower():
-                copy.append("Copy-Item.exe")
-            else:
-                copy.append("cp")
-
-            copy.append("-v")
-            copy.append(pdf_file.as_posix())
-            copy.append(ccn_pdf.as_posix())
-            run_command(command=copy)
+            shutil.copy2(pdf_file.as_posix(), ccn_pdf.as_posix())
         else:
             _logger.debug(f"No update need for {ccn_pdf} compared to {pdf_file}")
 
@@ -402,6 +382,8 @@ class LaTeXMLSuite:
 
         if update_target_compared_to_source(references, self.xml_refs):
             cmd.append("latexml")
+            if "win" in sys.platform:
+                cmd[-1] += ".bat"
             cmd.append(f"--dest={self.xml_refs.as_posix()}")
             cmd.append(f"--preload=hyperref.sty")
             cmd.append(f"{references}")
@@ -419,6 +401,8 @@ class LaTeXMLSuite:
             cmd.append("echo")
 
         cmd.append("latexml")
+        if "win" in sys.platform:
+            cmd[-1] += ".bat"
 
         out_dir = Path(self.output_directory_html)
         main_file = out_dir / Path(self.main_file_name)
@@ -439,6 +423,8 @@ class LaTeXMLSuite:
             cmd.append("echo")
 
         cmd.append("latexmlpost")
+        if "win" in sys.platform:
+            cmd[-1] += ".bat"
 
         out_dir = self.output_directory_html
         main_file = out_dir / Path(self.main_file_name)
@@ -483,14 +469,21 @@ class LaTeXMLSuite:
         run_command(command=cmd)
 
 
-def run_command(command):
+def run_command(command, shell=False):
     if command[0] != "echo":
         print(" ".join(command))
-    process = subprocess.Popen(command, stdout=subprocess.PIPE,
-                               stderr=subprocess.STDOUT)
+    try:
+        process = subprocess.Popen(command,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT,
+                                   env=os.environ,
+                                   shell=shell)
 
-    for line in iter(process.stdout.readline, b''):
-        print(line.decode().strip())
+    except FileNotFoundError as err:
+        _logger.warning(f"Failed for '{command}' with error:\n{err}")
+    else:
+        for line in iter(process.stdout.readline, b''):
+            print(line.decode().strip())
 
 
 class Settings:
