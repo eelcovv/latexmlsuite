@@ -542,7 +542,7 @@ def main(args):
 
     suite = LaTeXMLSuite(mode=args.mode,
                          test=args.test,
-                         make_exe=args.mak_exe,
+                         make_exe=args.make_exe,
                          overwrite=args.overwrite,
                          main_file_name=settings.main_name,
                          bibtex_file=settings.bibtex_file,
