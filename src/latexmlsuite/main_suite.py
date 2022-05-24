@@ -34,7 +34,7 @@ import sys
 
 from latexmlsuite import __version__
 
-MODES = ("all", "html", "latex", "clean", "xml")
+MODES = ("all", "html", "latex", "clean", "xml", "none")
 DEFAULT_MAIN = "main"
 DEFAULT_MODE = "all"
 
@@ -97,6 +97,10 @@ def parse_args(args):
     parser.add_argument(
         "--make_exe", help="executable naam om Makefile te runnen. Default 'make'",
         default="make"
+    )
+    parser.add_argument(
+        "--no_make", help="Sla het runnen van de makefiles over",
+        action="store_false", default=True, destination="do_make"
     )
     parser.add_argument(
         "--test", help="Doe een droge run, dus laat alleen commando's zien",
@@ -180,6 +184,7 @@ class LaTeXMLSuite:
     def __init__(self,
                  main_file_name="main",
                  make_exe="make",
+                 do_make=True,
                  overwrite=True,
                  bibtex_file=None,
                  output_directory=None,
@@ -206,6 +211,7 @@ class LaTeXMLSuite:
         self.make_exe = make_exe
         self.include_graphs = include_graphs
         self.test = test
+        self.do_make = do_make
         if main_file_name is None:
             self.main_file_name = Path("main.tex")
         else:
@@ -234,8 +240,12 @@ class LaTeXMLSuite:
 
     def run(self):
 
-        if self.makefile_directories is not None:
+        if self.makefile_directories is not None and self.do_make:
             self.launch_makefiles()
+
+        if self.mode == "none":
+            # met none maken we de documenten niet, alleen de make files worden gerund
+            return
 
         if self.mode in ("clean", "latex", "all"):
             self.launch_latexmk()
@@ -543,6 +553,7 @@ def main(args):
     suite = LaTeXMLSuite(mode=args.mode,
                          test=args.test,
                          make_exe=args.make_exe,
+                         do_make=args.do_make,
                          overwrite=args.overwrite,
                          main_file_name=settings.main_name,
                          bibtex_file=settings.bibtex_file,
