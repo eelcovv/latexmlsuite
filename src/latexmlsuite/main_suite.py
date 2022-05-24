@@ -34,7 +34,7 @@ import sys
 
 from latexmlsuite import __version__
 
-MODES = ("all", "html", "latex",  "clean", "xml")
+MODES = ("all", "html", "latex", "clean", "xml")
 DEFAULT_MAIN = "main"
 DEFAULT_MODE = "all"
 
@@ -123,6 +123,53 @@ def setup_logging(loglevel):
     logging.basicConfig(
         level=loglevel, stream=sys.stdout, format=logformat, datefmt="%Y-%m-%d %H:%M:%S"
     )
+
+
+def update_target_compared_to_source(source_file: Path, target_file: Path):
+    """
+    Script om te kijken of een target file geupdated moet worden.
+
+    Een update vindt plaats als target nog niet bestaat, of als target ouder is dan source
+
+    Args:
+        source_file: Path of str
+            Naam van de bron file
+        target_file: Path of str
+            Naam van de target file file
+
+    Returns: bool
+        vlag als target geupdated moet worden
+    """
+    source_file = Path(source_file)
+    target_file = Path(target_file)
+    time0 = datetime.datetime.fromtimestamp(source_file.stat().st_mtime, tz=datetime.timezone.utc)
+    update_target = True
+    if target_file.exists():
+        time1 = datetime.datetime.fromtimestamp(target_file.stat().st_mtime,
+                                                tz=datetime.timezone.utc)
+        update_target = time1 < time0
+    return update_target
+
+
+def copy_main_for_latexml(tex_input_file: Path, tex_output_file: Path,
+                          include_graphics: bool = False):
+    # lees de inhoud van main en pas de opties aan om grafieken en tabellen weg te laten
+    _logger.debug(f"Reading {tex_input_file}")
+    with open(tex_input_file, "r") as in_stream:
+        tex_content = in_stream.read()
+
+    _logger.debug(f"Writing {tex_output_file}")
+
+    options = ""
+    if not include_graphs:
+        options += "nographs,notables,nohyperrefs"
+    else:
+        options += "nohyperrefs"
+    cbsdocs = "]{cbsdocs}"
+
+    tex_content_new = re.sub(cbsdocs, options + cbsdocs, tex_content)
+    with open(tex_output_file, "w") as out_stream:
+        out_stream.write(tex_content_new)
 
 
 class LatexXMLSuite:
@@ -288,22 +335,11 @@ class LatexXMLSuite:
         cmd.append(f"-output-directory={out_dir}")
 
         # lees de inhoud van main en pas de opties aan om grafieken en tabellen weg te laten
-        _logger.debug(f"Reading {self.main_file_name}")
-        with open(self.main_file_name, "r") as in_stream:
-            tex_content = in_stream.read()
-
-        _logger.debug(f"Writing {main_file}")
-
-        options = ""
-        if not self.include_graphs:
-            options += "nographs,notables,nohyperrefs"
+        if update_target_compared_to_source(self.main_file_name, main_file):
+            copy_main_for_latexml(tex_input_file=self.main_file_name, tex_output_file=main_file,
+                                  include_graphics=self.include_graphs)
         else:
-            options += "nohyperrefs"
-        cbsdocs = "]{cbsdocs}"
-
-        tex_content_new = re.sub(cbsdocs, options + cbsdocs, tex_content)
-        with open(main_file, "w") as out_stream:
-            out_stream.write(tex_content_new)
+            _logger.debug(f"No update need for {self.main_file_name} compared to {main_file}")
 
         run_command(command=cmd)
 
@@ -319,30 +355,24 @@ class LatexXMLSuite:
             self.launch_latexmk()
         ccn_pdf = self.ccn_output_directory / Path(self.output_filename)
 
-        time0 = datetime.datetime.fromtimestamp(pdf_file.stat().st_mtime, tz=datetime.timezone.utc)
-        update_pdf = True
-        if ccn_pdf.exists():
-            time1 = datetime.datetime.fromtimestamp(ccn_pdf.stat().st_mtime,
-                                                    tz=datetime.timezone.utc)
-            update_pdf = time1 < time0
-
-        copy = []
-        if self.test:
-            copy.append("echo")
-
-        if "win" in sys.platform.lower():
-            copy.append("Copy-Item.exe")
-        else:
-            copy.append("cp")
-
-        copy.append("-v")
-        copy.append(pdf_file.as_posix())
-        copy.append(ccn_pdf.as_posix())
+        update_pdf = update_target_compared_to_source(pdf_file, ccn_pdf)
 
         if update_pdf:
+            copy = []
+            if self.test:
+                copy.append("echo")
+
+            if "win" in sys.platform.lower():
+                copy.append("Copy-Item.exe")
+            else:
+                copy.append("cp")
+
+            copy.append("-v")
+            copy.append(pdf_file.as_posix())
+            copy.append(ccn_pdf.as_posix())
             run_command(command=copy)
         else:
-            _logger.debug(f"{ccn_pdf} not older then {pdf_file}. skip ")
+            _logger.debug(f"No update need for {ccn_pdf} compared to {pdf_file}")
 
     def launch_latexml_bibtex(self):
         cmd = []
@@ -350,13 +380,18 @@ class LatexXMLSuite:
         if self.test:
             cmd.append("echo")
 
-        cmd.append("latexml")
         references = self.bibtex_file
         self.xml_refs = self.output_directory_html / Path(references + ".xml")
-        cmd.append(f"--dest={self.xml_refs.as_posix()}")
-        cmd.append(f"--preload=hyperref.sty")
-        cmd.append(f"{references}")
-        run_command(command=cmd)
+
+        if update_target_compared_to_source(references, self.xml_refs):
+            cmd.append("latexml")
+            cmd.append(f"--dest={self.xml_refs.as_posix()}")
+            cmd.append(f"--preload=hyperref.sty")
+            cmd.append(f"{references}")
+
+            run_command(command=cmd)
+        else:
+            _logger.debug(f"No update need for {self.xml_refs} compared to {references}")
 
     def launch_latexml(self):
         cmd = []
@@ -373,7 +408,10 @@ class LatexXMLSuite:
         cmd.append(f"--dest={xml_file.as_posix()}")
         cmd.append(f"{main_file.as_posix()}")
 
-        run_command(command=cmd)
+        if update_target_compared_to_source(main_file, xml_file):
+            run_command(command=cmd)
+        else:
+            _logger.debug(f"No update need for {xml_file} compared to {main_file}")
 
     def launch_latexml_post(self):
         cmd = []
