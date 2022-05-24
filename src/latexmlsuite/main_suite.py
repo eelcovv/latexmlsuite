@@ -95,6 +95,10 @@ def parse_args(args):
         default="rapport_settings.yml"
     )
     parser.add_argument(
+        "--make_exe", help="executable naam om Makefile te runnen. Default 'make'",
+        default="make"
+    )
+    parser.add_argument(
         "--test", help="Doe een droge run, dus laat alleen commando's zien",
         action="store_true", default=False
     )
@@ -175,6 +179,7 @@ def copy_main_for_latexml(tex_input_file: Path, tex_output_file: Path,
 class LatexXMLSuite:
     def __init__(self,
                  main_file_name="main",
+                 make_exe="make",
                  overwrite=True,
                  bibtex_file=None,
                  output_directory=None,
@@ -198,6 +203,7 @@ class LatexXMLSuite:
         self.ccn_tables_dir = self.ccn_output_directory / Path("tables")
         self.ccn_highcharts_dir = self.ccn_output_directory / Path("highcharts")
         self.makefile_directories = makefile_directories
+        self.make_exe = make_exe
         self.include_graphs = include_graphs
         self.test = test
         if main_file_name is None:
@@ -311,7 +317,7 @@ class LatexXMLSuite:
             cmd = []
             if self.test:
                 cmd.append("echo")
-            cmd.append("make")
+            cmd.append(self.make_exe)
             if self.mode == "clean":
                 cmd.append("clean")
             with path.Path(makefile_dir):
@@ -536,6 +542,7 @@ def main(args):
 
     suite = LatexXMLSuite(mode=args.mode,
                           test=args.test,
+                          mak_exe=args.mak_exe,
                           overwrite=args.overwrite,
                           main_file_name=settings.main_name,
                           bibtex_file=settings.bibtex_file,
