@@ -39,6 +39,7 @@ param (
     [switch]$test = $false,
     [switch]$dryrun = $false,
     [switch]$gmake = $false,
+    [switch]$vv = $false,
     [switch]$help = $false,
     [ValidateSet('all', 'latex', 'xml', 'html', 'none')]
     [string]$mode="all"
@@ -54,6 +55,12 @@ if ($dryrun){
 else{
     $dryrun_optie = ""
 }
+if ($vv){
+    $debug_optie = "--debug"
+}
+else{
+    $debug_optie = ""
+}
 if ($gmake){
     $make_optie = "--make_exe gmake"
 }
@@ -66,6 +73,7 @@ $cmd="$script_name
       --settings_filename $settings_file
       $dryrun_optie
       $make_optie
+      $debug_optie
       --mode $mode
 "
 $cmd = $cmd -replace '\s+', ' '
