@@ -29,8 +29,12 @@ all: afmetingen_bloem
 # de regel die je uitvoert *moet* inspringen met een *tab*
 afmetingen_bloem: ${targets}
 ${targets}: ${dependencies}
-	mkdir -pv ${highcharts_dir}
-	cp -v ${dependencies}  ${targets}
+	python -c "import pathlib; pathlib.Path('${highcharts_dir}').mkdir(parents=True, exist_ok=True)"
+	python -c "import shutil; shutil.copyfile('${dependencies}', '${targets}')"
+
+# bovenstaande python commando's zijn gebruikt om onderstaande regels onder powershell uit te voeren
+#mkdir -pv ${highcharts_dir}
+#cp -v ${dependencies}  ${targets}
 
 clean:
 	@$(foreach file, $(targets), test -f $(file) && rm -v $(file) || echo No $(file);)
