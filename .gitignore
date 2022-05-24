@@ -52,3 +52,7 @@ MANIFEST
 .venv*/
 .conda*/
 .python-version
+/examples/voorbeeld_cbs_publicatie/ccn/
+/examples/voorbeeld_cbs_publicatie/figures/iris/afmetingen_bloem.pdf
+/examples/voorbeeld_cbs_publicatie/out/
+/examples/voorbeeld_cbs_publicatie/out_html/
