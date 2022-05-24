@@ -40,7 +40,7 @@ param (
     [switch]$dryrun = $false,
     [switch]$gmake = $false,
     [switch]$help = $false,
-    [ValidateSet('all', 'latex', 'xml', 'html')]
+    [ValidateSet('all', 'latex', 'xml', 'html', 'none')]
     [string]$mode="all"
 )
 
