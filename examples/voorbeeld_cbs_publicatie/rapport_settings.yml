@@ -6,9 +6,11 @@ general:
   output_filename: voorbeeld_publicatie.pdf
   ccn_output_directory: ccn
   merge_html: false
-makefile_directories:
+# deze sectie bevat alle directories die een Makefile hebben om de plaatjes of tabellen te maken
+makefiles:
   - "figures/iris"
   - "figures/iris_via_hc"
+  - "tables"
 cache:
   output_directory: out
   output_html_directory: out_html
