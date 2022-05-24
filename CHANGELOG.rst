@@ -2,6 +2,11 @@
 Changelog
 =========
 
+Version 0.3
+===========
+
+- Script getest op powerhsell en werkt
+
 Version 0.2
 ===========
 
