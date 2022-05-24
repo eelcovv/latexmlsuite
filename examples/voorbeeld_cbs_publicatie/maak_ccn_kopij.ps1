@@ -16,7 +16,7 @@
 .PARAMETER dryrun
     Laat alleen de commandos zien die aangeroepen worden zonder ze uit te voeren
 .PARAMETER mode
-    Geef de modus van het script. Geldig zijn 'all', 'latex', 'xml', 'html' of 'none'. Default = 'all'
+    Geef de modus van het script. Geldig zijn 'all', 'latex', 'xml', 'html', 'clean' of 'none'. Default = 'all'
     all:   doorloop alle stappen.
     latex: maak alleen de latex pdf
     xml: maak alleen de xml vanuit de tex files. Langzame stap
@@ -41,7 +41,7 @@ param (
     [switch]$gmake = $false,
     [switch]$vv = $false,
     [switch]$help = $false,
-    [ValidateSet('all', 'latex', 'xml', 'html', 'none')]
+    [ValidateSet('all', 'latex', 'xml', 'html', 'clean', 'none')]
     [string]$mode="all"
 )
 

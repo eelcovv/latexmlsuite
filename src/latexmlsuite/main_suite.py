@@ -252,6 +252,8 @@ class LaTeXMLSuite:
 
         if self.mode in ("clean", "latex", "all"):
             self.launch_latexmk()
+            if self.mode == "clean":
+                self.clean_log()
         if self.mode in ("xml", "all"):
             self.launch_latexmk_for_html()
             self.copy_pdf()
@@ -277,6 +279,22 @@ class LaTeXMLSuite:
             rm.append("rm")
             rm.append("-v")
         rm.append(f"{self.ccn_html_dir.as_posix()}/*.css")
+        run_command(rm)
+
+    def clean_log(self):
+
+        rm = []
+        if self.test:
+            rm.append("echo")
+        if "win" in sys.platform.lower():
+            rm.append("powershell.exe")
+            rm.append("Remove-Item")
+            rm.append("-recurse")
+            rm.append("-force")
+        else:
+            rm.append("rm")
+            rm.append("-v")
+        rm.append(f"*.log")
         run_command(rm)
 
     def rename_and_clean_html(self):
