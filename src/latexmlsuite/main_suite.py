@@ -100,7 +100,7 @@ def parse_args(args):
     )
     parser.add_argument(
         "--no_make", help="Sla het runnen van de makefiles over",
-        action="store_false", default=True, destination="do_make"
+        action="store_false", default=True, dest="do_make"
     )
     parser.add_argument(
         "--test", help="Doe een droge run, dus laat alleen commando's zien",
