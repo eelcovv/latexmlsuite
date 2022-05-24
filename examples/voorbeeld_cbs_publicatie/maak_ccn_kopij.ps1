@@ -54,10 +54,10 @@ else{
     $dryrun_optie = ""
 }
 if ($gmake){
-    make_optie = "--make_exe gmake"
+    $make_optie = "--make_exe gmake"
 }
 else{
-    make_optie = ""
+    $make_optie = ""
 }
 
 
