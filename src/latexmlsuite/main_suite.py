@@ -274,9 +274,10 @@ class LaTeXMLSuite:
         if self.mode in ("xml", "all"):
             self.launch_latexmk_for_html()
             self.copy_pdf()
-            if self.bibtex_file is not None and self.do_latexml:
-                self.launch_latexml_bibtex()
-            self.launch_latexml()
+            if self.do_latexml:
+                if self.bibtex_file is not None:
+                    self.launch_latexml_bibtex()
+                self.launch_latexml()
         if self.mode in ("html", "all"):
             if self.do_latexml:
                 # dit werkt alleen als je latexml geinstalleerd hebt.
@@ -636,6 +637,7 @@ def main(args):
                          make_exe=args.make_exe,
                          do_make=args.do_make,
                          do_scripts=args.do_scripts,
+                         do_latexml=args.do_latexml,
                          overwrite=args.overwrite,
                          main_file_name=settings.main_name,
                          bibtex_file=settings.bibtex_file,
