@@ -382,11 +382,17 @@ class LaTeXMLSuite:
             else:
                 script = script.with_suffix(".sh")
                 cmd.append("sh")
-            script_base = script.stem + script.suffix
-            cmd.append(script_base)
+
             print(f"cd {script.parent}", end="; ")
             with path.Path(script.parent):
+                script_base = Path(script.stem + script.suffix)
+                if not Path(script_base).exists():
+                    _logger.warning(f"{script_base} does not excist")
+                script_full = script_base.absolute()
+                cmd.append(script_full.as_posix())
+
                 run_command(command=cmd)
+
     def launch_makefiles(self):
         """
         Loop over alle directories die een Makefile bevatten en lanceer het make commando
@@ -648,7 +654,7 @@ def main(args):
                          makefile_directories=settings.makefile_directories,
                          post_scripts=settings.post_scripts,
                          include_graphs=args.include_graphs,
-                         platform_is_windows= platform_is_windows
+                         platform_is_windows=platform_is_windows
                          )
 
     suite.run()
