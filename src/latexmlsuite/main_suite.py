@@ -111,6 +111,10 @@ def parse_args(args):
         action="store_false", default=True, dest="do_scripts"
     )
     parser.add_argument(
+        "--no_latexml", help="Sla het runnen van alle latexml scripts over",
+        action="store_false", default=True, dest="do_latexml"
+    )
+    parser.add_argument(
         "--test", help="Doe een droge run, dus laat alleen commando's zien",
         action="store_true", default=False
     )
@@ -194,6 +198,7 @@ class LaTeXMLSuite:
                  make_exe="make",
                  do_make=True,
                  do_scripts=True,
+                 do_latexml=True,
                  overwrite=True,
                  bibtex_file=None,
                  output_directory=None,
@@ -226,6 +231,7 @@ class LaTeXMLSuite:
         self.test = test
         self.do_make = do_make
         self.do_scripts = do_scripts
+        self.do_latexml = do_latexml
         if main_file_name is None:
             self.main_file_name = Path("main.tex")
         else:
@@ -268,13 +274,15 @@ class LaTeXMLSuite:
         if self.mode in ("xml", "all"):
             self.launch_latexmk_for_html()
             self.copy_pdf()
-            if self.bibtex_file is not None:
+            if self.bibtex_file is not None and self.do_latexml:
                 self.launch_latexml_bibtex()
             self.launch_latexml()
         if self.mode in ("html", "all"):
-            self.launch_latexml_post()
-            self.rename_and_clean_html()
-            self.clean_ccs()
+            if self.do_latexml:
+                # dit werkt alleen als je latexml geinstalleerd hebt.
+                self.launch_latexml_post()
+                self.rename_and_clean_html()
+                self.clean_ccs()
             if self.post_scripts is not None and self.do_scripts:
                 self.launch_post_scripts()
 
