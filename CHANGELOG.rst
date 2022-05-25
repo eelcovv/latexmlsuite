@@ -2,10 +2,11 @@
 Changelog
 =========
 
-Version 0.3
+Version 0.3.1
 ===========
 
 - Script getest op powerhsell en werkt
+- Post shell scripts toegevoegd
 
 Version 0.2
 ===========
