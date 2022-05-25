@@ -107,6 +107,10 @@ def parse_args(args):
         action="store_false", default=True, dest="do_make"
     )
     parser.add_argument(
+        "--no_scripts", help="Sla het runnen van de postscripts over",
+        action="store_false", default=True, dest="do_scripts"
+    )
+    parser.add_argument(
         "--test", help="Doe een droge run, dus laat alleen commando's zien",
         action="store_true", default=False
     )
@@ -189,6 +193,7 @@ class LaTeXMLSuite:
                  main_file_name="main",
                  make_exe="make",
                  do_make=True,
+                 do_scripts=True,
                  overwrite=True,
                  bibtex_file=None,
                  output_directory=None,
@@ -220,6 +225,7 @@ class LaTeXMLSuite:
         self.include_graphs = include_graphs
         self.test = test
         self.do_make = do_make
+        self.do_scripts = do_scripts
         if main_file_name is None:
             self.main_file_name = Path("main.tex")
         else:
@@ -269,7 +275,7 @@ class LaTeXMLSuite:
             self.launch_latexml_post()
             self.rename_and_clean_html()
             self.clean_ccs()
-            if self.post_scripts is not None:
+            if self.post_scripts is not None and self.do_scripts:
                 self.launch_post_scripts()
 
     def clean_ccs(self):
@@ -621,6 +627,7 @@ def main(args):
                          test=args.test,
                          make_exe=args.make_exe,
                          do_make=args.do_make,
+                         do_scripts=args.do_scripts,
                          overwrite=args.overwrite,
                          main_file_name=settings.main_name,
                          bibtex_file=settings.bibtex_file,
