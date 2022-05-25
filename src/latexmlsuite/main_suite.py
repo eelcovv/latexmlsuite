@@ -269,9 +269,8 @@ class LaTeXMLSuite:
             self.launch_latexml_post()
             self.rename_and_clean_html()
             self.clean_ccs()
-
-        if self.post_scripts is not None:
-            self.launch_post_scripts()
+            if self.post_scripts is not None:
+                self.launch_post_scripts()
 
     def clean_ccs(self):
 
