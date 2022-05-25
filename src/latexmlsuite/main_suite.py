@@ -354,6 +354,7 @@ class LaTeXMLSuite:
             cmd.append(self.make_exe)
             if self.mode == "clean":
                 cmd.append("clean")
+            print(f"cd {makefile_dir}", end="; ")
             with path.Path(makefile_dir):
                 run_command(command=cmd)
 
