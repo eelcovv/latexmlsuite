@@ -84,6 +84,7 @@ def parse_args(args):
         help="set loglevel to INFO",
         action="store_const",
         const=logging.INFO,
+        default=logging.WARNING
     )
     parser.add_argument(
         "-vv",
@@ -130,7 +131,7 @@ def setup_logging(loglevel):
     Args:
       loglevel (int): minimum loglevel for emitting messages
     """
-    logformat = "[%(asctime)s] %(levelname)s:%(name)s:%(message)s"
+    logformat = '%(levelname)-8s [%(filename)s:%(lineno)4d] %(message)s'
     logging.basicConfig(
         level=loglevel, stream=sys.stdout, format=logformat, datefmt="%Y-%m-%d %H:%M:%S"
     )
@@ -195,10 +196,12 @@ class LaTeXMLSuite:
                  output_filename=None,
                  ccn_output_directory=None,
                  makefile_directories=None,
+                 post_scripts=None,
                  mode=None,
                  test=False,
                  merge_chapters=False,
                  include_graphs=False,
+                 platform_is_windows=False
                  ):
 
         self.output_filename = output_filename
@@ -211,6 +214,8 @@ class LaTeXMLSuite:
         self.ccn_tables_dir = self.ccn_output_directory / Path("tables")
         self.ccn_highcharts_dir = self.ccn_output_directory / Path("highcharts")
         self.makefile_directories = makefile_directories
+        self.post_scripts = post_scripts
+        self.platform_is_windows = platform_is_windows
         self.make_exe = make_exe
         self.include_graphs = include_graphs
         self.test = test
@@ -265,6 +270,9 @@ class LaTeXMLSuite:
             self.rename_and_clean_html()
             self.clean_ccs()
 
+        if self.post_scripts is not None:
+            self.launch_post_scripts()
+
     def clean_ccs(self):
 
         pattern = f"{self.ccn_html_dir.as_posix()}/*.css"
@@ -276,7 +284,7 @@ class LaTeXMLSuite:
         rm = []
         if self.test:
             rm.append("echo")
-        if "win" in sys.platform.lower():
+        if self.platform_is_windows:
             rm.append("powershell.exe")
             rm.append("Remove-Item")
             rm.append("-recurse")
@@ -299,7 +307,7 @@ class LaTeXMLSuite:
         rm = []
         if self.test:
             rm.append("echo")
-        if "win" in sys.platform.lower():
+        if self.platform_is_windows:
             rm.append("powershell.exe")
             rm.append("Remove-Item")
             rm.append("-recurse")
@@ -328,7 +336,9 @@ class LaTeXMLSuite:
             new_base = "_".join([prefix, html.stem + html.suffix])
             new_html = html.parent / Path(new_base)
 
-            shutil.move(html.as_posix(), new_html.as_posix())
+            print(f"mv {html} {new_html}")
+            if not self.test:
+                shutil.move(html.as_posix(), new_html.as_posix())
 
             cleaner = []
             if self.test:
@@ -342,6 +352,27 @@ class LaTeXMLSuite:
 
             run_command(command=cleaner)
 
+    def launch_post_scripts(self):
+        """
+        Loop over alle directories die een Makefile bevatten en lanceer het make commando
+        """
+
+        for script_filename in self.post_scripts:
+            cmd = []
+            script = Path(script_filename)
+            if self.test:
+                cmd.append("echo")
+            if self.platform_is_windows:
+                script = script.with_suffix(".ps1")
+                cmd.append("powershell.exe")
+            else:
+                script = script.with_suffix(".sh")
+                cmd.append("sh")
+            script_base = script.stem + script.suffix
+            cmd.append(script_base)
+            print(f"cd {script.parent}", end="; ")
+            with path.Path(script.parent):
+                run_command(command=cmd)
     def launch_makefiles(self):
         """
         Loop over alle directories die een Makefile bevatten en lanceer het make commando
@@ -400,8 +431,10 @@ class LaTeXMLSuite:
         update_pdf = update_target_compared_to_source(pdf_file, ccn_pdf)
 
         if update_pdf:
-            ccn_pdf.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(pdf_file.as_posix(), ccn_pdf.as_posix())
+            print(f"mkdir {ccn_pdf.parent}; cp {pdf_file} {ccn_pdf}")
+            if not self.test:
+                ccn_pdf.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(pdf_file.as_posix(), ccn_pdf.as_posix())
         else:
             _logger.debug(f"No update need for {ccn_pdf} compared to {pdf_file}")
 
@@ -416,7 +449,7 @@ class LaTeXMLSuite:
 
         if update_target_compared_to_source(references, self.xml_refs):
             cmd.append("latexml")
-            if "win" in sys.platform:
+            if self.platform_is_windows:
                 cmd[-1] += ".bat"
             cmd.append(f"--dest={self.xml_refs.as_posix()}")
             cmd.append(f"--preload=hyperref.sty")
@@ -435,7 +468,7 @@ class LaTeXMLSuite:
             cmd.append("echo")
 
         cmd.append("latexml")
-        if "win" in sys.platform:
+        if self.platform_is_windows:
             cmd[-1] += ".bat"
 
         out_dir = Path(self.output_directory_html)
@@ -457,7 +490,7 @@ class LaTeXMLSuite:
             cmd.append("echo")
 
         cmd.append("latexmlpost")
-        if "win" in sys.platform:
+        if self.platform_is_windows:
             cmd[-1] += ".bat"
 
         out_dir = self.output_directory_html
@@ -528,6 +561,7 @@ class Settings:
         self.output_filename = None
         self.ccn_output_directory = None
         self.makefile_directories = None
+        self.post_scripts = None
         self.output_directory = None
         self.output_directory_html = None
 
@@ -544,6 +578,7 @@ class Settings:
         self.bibtex_file = general_settings.get("bibtex_file", self.main_name)
         self.ccn_output_directory = general_settings.get("ccn_output_directory", "ccn")
         self.makefile_directories = settings.get("makefiles")
+        self.post_scripts = settings.get("postscripts")
         out_def = Path(self.main_name).with_suffix(".pdf")
         self.output_filename = general_settings.get("output_filename", out_def)
         if cache_settings is not None:
@@ -559,6 +594,7 @@ class Settings:
         _logger.debug(msgf.format("output_file_name", self.output_filename))
         _logger.debug(msgf.format("ccn_output_directory", self.ccn_output_directory))
         _logger.debug(msgf.format("makefile_directories", self.makefile_directories))
+        _logger.debug(msgf.format("postscripts", self.post_scripts))
 
 
 def main(args):
@@ -577,6 +613,11 @@ def main(args):
     _logger.debug("Start here")
     settings.report_settings()
 
+    if "win" in sys.platform:
+        platform_is_windows = True
+    else:
+        platform_is_windows = False
+
     suite = LaTeXMLSuite(mode=args.mode,
                          test=args.test,
                          make_exe=args.make_exe,
@@ -589,7 +630,9 @@ def main(args):
                          output_filename=settings.output_filename,
                          ccn_output_directory=settings.ccn_output_directory,
                          makefile_directories=settings.makefile_directories,
+                         post_scripts=settings.post_scripts,
                          include_graphs=args.include_graphs,
+                         platform_is_windows= platform_is_windows
                          )
 
     suite.run()
