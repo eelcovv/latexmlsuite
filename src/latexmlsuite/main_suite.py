@@ -400,6 +400,7 @@ class LaTeXMLSuite:
         update_pdf = update_target_compared_to_source(pdf_file, ccn_pdf)
 
         if update_pdf:
+            ccn_pdf.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(pdf_file.as_posix(), ccn_pdf.as_posix())
         else:
             _logger.debug(f"No update need for {ccn_pdf} compared to {pdf_file}")
