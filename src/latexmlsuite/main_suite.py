@@ -217,6 +217,10 @@ class TerminalColors:
         self.use_terminal_colors = use_terminal_colors
         self.foreground_color = self.set_color(color_name=foreground_color, foreground=True)
         self.background_color = self.set_color(color_name=background_color, foreground=False)
+        if use_terminal_colors:
+            self.reset_colors = Style.RESET_ALL
+        else:
+            self.reset_colors = ""
 
     def set_color(self, color_name, foreground=True):
         if color_name is not None and self.use_terminal_colors:
@@ -386,7 +390,7 @@ class LaTeXMLSuite:
         html_files = glob.glob(f"{self.ccn_html_dir.as_posix()}/*.html")
         fc = self.terminal_colors.foreground_color
         bc = self.terminal_colors.background_color
-        rs = Style.RESET_ALL
+        rs = self.terminal_colors.reset_colors
 
         for html_file in html_files:
             html = Path(html_file)
@@ -420,7 +424,7 @@ class LaTeXMLSuite:
         """
         fc = self.terminal_colors.foreground_color
         bc = self.terminal_colors.background_color
-        rs = Style.RESET_ALL
+        rs = self.terminal_colors.reset_colors
         for script_filename in self.post_scripts:
             cmd = []
             script = Path(script_filename)
@@ -449,7 +453,7 @@ class LaTeXMLSuite:
         """
         fc = self.terminal_colors.foreground_color
         bc = self.terminal_colors.background_color
-        rs = Style.RESET_ALL
+        rs = self.terminal_colors.reset_colors
 
         for makefile_dir in self.makefile_directories:
             cmd = []
@@ -610,13 +614,9 @@ class LaTeXMLSuite:
 
 
 def run_command(command, shell=False, terminal_colors=None):
-    if terminal_colors is None:
-        fc = ""
-        bc = ""
-    else:
-        fc = terminal_colors.foreground_color
-        bc = terminal_colors.background_color
-    rs = Style.RESET_ALL
+    fc = terminal_colors.foreground_color
+    bc = terminal_colors.background_color
+    rs = terminal_colors.reset_colors
     if command[0] != "echo":
         print(f"{fc}{bc}" + " ".join(command) + f"{rs}")
     try:
