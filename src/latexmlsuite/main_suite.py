@@ -23,6 +23,7 @@ References:
 import argparse
 import codecs
 import datetime
+import colorama
 from colorama import Fore, Back, Style
 from colorama.ansi import AnsiBack, AnsiFore
 import glob
@@ -43,8 +44,10 @@ MODES = ("all", "html", "latex", "clean", "xml", "none")
 DEFAULT_MAIN = "main"
 DEFAULT_MODE = "all"
 
-FOREGROUND_COLOR_OPTIONS = set([c for c in dir(AnsiFore) if not "__" in c])
-BACKGROUND_COLOR_OPTIONS = set([c for c in dir(AnsiBack) if not "__" in c])
+FOREGROUND_COLOR_OPTIONS = set([c for c in dir(AnsiFore) if "__" not in c])
+BACKGROUND_COLOR_OPTIONS = set([c for c in dir(AnsiBack) if "__" not in c])
+# dit is nodig om kleuren in een powershell te kunnen gebruiken
+colorama.init(True)
 
 __author__ = "Eelco van Vliet"
 __copyright__ = "Eelco van Vliet"
