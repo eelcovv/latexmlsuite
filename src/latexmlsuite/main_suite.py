@@ -23,8 +23,8 @@ References:
 import argparse
 import codecs
 import datetime
-from colorama import Fore, Back
-from colorama.ansi import AnsiBack, AnsiFore, AnsiCodes
+from colorama import Fore, Back, Style
+from colorama.ansi import AnsiBack, AnsiFore
 import glob
 import logging
 import os
@@ -42,6 +42,9 @@ from latexmlsuite import __version__
 MODES = ("all", "html", "latex", "clean", "xml", "none")
 DEFAULT_MAIN = "main"
 DEFAULT_MODE = "all"
+
+FOREGROUND_COLOR_OPTIONS = set([c for c in dir(AnsiFore) if not "__" in c])
+BACKGROUND_COLOR_OPTIONS = set([c for c in dir(AnsiBack) if not "__" in c])
 
 __author__ = "Eelco van Vliet"
 __copyright__ = "Eelco van Vliet"
@@ -115,6 +118,18 @@ def parse_args(args):
     parser.add_argument(
         "--no_latexml", help="Sla het runnen van alle latexml scripts over",
         action="store_false", default=True, dest="do_latexml"
+    )
+    parser.add_argument(
+        "--no_colors", help="Geef geen kleur aan de commando's die naar terminal geschreven worden",
+        action="store_false", default=True, dest="use_terminal_colors"
+    )
+    parser.add_argument(
+        "--foreground_color", help="Voorgrondkleur van commando's",
+        choices=FOREGROUND_COLOR_OPTIONS, default="RED"
+    )
+    parser.add_argument(
+        "--background_color", help="Achtergrondkleur van commando's",
+        choices=BACKGROUND_COLOR_OPTIONS, default="WHITE"
     )
     parser.add_argument(
         "--test", help="Doe een droge run, dus laat alleen commando's zien",
@@ -195,17 +210,17 @@ def copy_main_for_latexml(tex_input_file: Path, tex_output_file: Path,
 
 
 class TerminalColors:
-    def __init__(self, foreground_color=None, background_color=None, no_colors=False):
-        self.no_colors = no_colors
+    def __init__(self, foreground_color=None, background_color=None, use_terminal_colors=False):
+        self.use_terminal_colors = use_terminal_colors
         self.foreground_color = self.set_color(color_name=foreground_color, foreground=True)
         self.background_color = self.set_color(color_name=background_color, foreground=False)
 
     def set_color(self, color_name, foreground=True):
-        if color_name is not None and not self.no_colors:
+        if color_name is not None and self.use_terminal_colors:
             if foreground:
-                color = getattr(AnsiFore, color_name)
+                color = getattr(Fore, color_name)
             else:
-                color = getattr(AnsiBack, color_name)
+                color = getattr(Back, color_name)
         else:
             color = ""
 
@@ -234,12 +249,12 @@ class LaTeXMLSuite:
                  platform_is_windows=False,
                  foreground_color=None,
                  background_color=None,
-                 no_colors=False,
+                 use_terminal_colors=False,
                  ):
 
         self.terminal_colors = TerminalColors(foreground_color=foreground_color,
                                               background_color=background_color,
-                                              no_colors=no_colors)
+                                              use_terminal_colors=use_terminal_colors)
         self.output_filename = output_filename
         if ccn_output_directory is not None:
             self.ccn_output_directory = Path(ccn_output_directory)
@@ -335,7 +350,7 @@ class LaTeXMLSuite:
             rm.append("-v")
             for file in css_files:
                 rm.append(file)
-        run_command(rm)
+        run_command(rm, terminal_colors=self.terminal_colors)
 
     def clean_log(self):
         pattern = f"*.css"
@@ -359,7 +374,7 @@ class LaTeXMLSuite:
             for file in log_files:
                 rm.append(file)
 
-        run_command(rm)
+        run_command(rm, terminal_colors=self.terminal_colors)
 
     def rename_and_clean_html(self):
         """
@@ -368,6 +383,7 @@ class LaTeXMLSuite:
         html_files = glob.glob(f"{self.ccn_html_dir.as_posix()}/*.html")
         fc = self.terminal_colors.foreground_color
         bc = self.terminal_colors.background_color
+        rs = Style.RESET_ALL
 
         for html_file in html_files:
             html = Path(html_file)
@@ -379,7 +395,7 @@ class LaTeXMLSuite:
             new_base = "_".join([prefix, html.stem + html.suffix])
             new_html = html.parent / Path(new_base)
 
-            print(f"{fc}{bc}mv {html} {new_html}")
+            print(f"{fc}{bc}mv {html} {new_html}{rs}")
             if not self.test:
                 shutil.move(html.as_posix(), new_html.as_posix())
 
@@ -393,7 +409,7 @@ class LaTeXMLSuite:
             if self.overwrite:
                 cleaner.append("--overwrite")
 
-            run_command(command=cleaner)
+            run_command(command=cleaner, terminal_colors=self.terminal_colors)
 
     def launch_post_scripts(self):
         """
@@ -401,6 +417,7 @@ class LaTeXMLSuite:
         """
         fc = self.terminal_colors.foreground_color
         bc = self.terminal_colors.background_color
+        rs = Style.RESET_ALL
         for script_filename in self.post_scripts:
             cmd = []
             script = Path(script_filename)
@@ -413,7 +430,7 @@ class LaTeXMLSuite:
                 script = script.with_suffix(".sh")
                 cmd.append("sh")
 
-            print(f"{fc}{bc}cd {script.parent}", end="; ")
+            print(f"{fc}{bc}cd {script.parent}{rs}", end="; ")
             with path.Path(script.parent):
                 script_base = Path(script.stem + script.suffix)
                 if not Path(script_base).exists():
@@ -421,7 +438,7 @@ class LaTeXMLSuite:
                 script_full = script_base.absolute()
                 cmd.append(script_full.as_posix())
 
-                run_command(command=cmd)
+                run_command(command=cmd, terminal_colors=self.terminal_colors)
 
     def launch_makefiles(self):
         """
@@ -429,6 +446,7 @@ class LaTeXMLSuite:
         """
         fc = self.terminal_colors.foreground_color
         bc = self.terminal_colors.background_color
+        rs = Style.RESET_ALL
 
         for makefile_dir in self.makefile_directories:
             cmd = []
@@ -437,7 +455,7 @@ class LaTeXMLSuite:
             cmd.append(self.make_exe)
             if self.mode == "clean":
                 cmd.append("clean")
-            print(f"{fc}{bc}cd {makefile_dir}", end="; ")
+            print(f"{fc}{bc}cd {makefile_dir}{rs}", end="; ")
             with path.Path(makefile_dir):
                 run_command(command=cmd, terminal_colors=self.terminal_colors)
 
@@ -595,8 +613,9 @@ def run_command(command, shell=False, terminal_colors=None):
     else:
         fc = terminal_colors.foreground_color
         bc = terminal_colors.background_color
+    rs = Style.RESET_ALL
     if command[0] != "echo":
-        print(f"{fc}{bc}" + " ".join(command))
+        print(f"{fc}{bc}" + " ".join(command) + f"{rs}")
     try:
         process = subprocess.Popen(command,
                                    stdout=subprocess.PIPE,
@@ -692,7 +711,11 @@ def main(args):
                          makefile_directories=settings.makefile_directories,
                          post_scripts=settings.post_scripts,
                          include_graphs=args.include_graphs,
-                         platform_is_windows=platform_is_windows
+                         platform_is_windows=platform_is_windows,
+                         foreground_color=args.foreground_color,
+                         background_color=args.background_color,
+                         use_terminal_colors=args.use_terminal_colors,
+
                          )
 
     suite.run()
