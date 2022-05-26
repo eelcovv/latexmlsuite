@@ -115,8 +115,16 @@ def parse_args(args):
         action="store_false", default=True, dest="do_make"
     )
     parser.add_argument(
-        "--no_scripts", help="Sla het runnen van de postscripts over",
+        "--no_scripts", help="Sla het runnen van de alle scripts over",
         action="store_false", default=True, dest="do_scripts"
+    )
+    parser.add_argument(
+        "--no_post_scripts", help="Sla het runnen van de postscripts over",
+        action="store_false", default=True, dest="do_postscripts"
+    )
+    parser.add_argument(
+        "--no_pre_scripts", help="Sla het runnen van de prescripts over",
+        action="store_false", default=True, dest="do_prescripts"
     )
     parser.add_argument(
         "--no_latexml", help="Sla het runnen van alle latexml scripts over",
@@ -239,7 +247,8 @@ class LaTeXMLSuite:
                  main_file_name="main",
                  make_exe="make",
                  do_make=True,
-                 do_scripts=True,
+                 do_postscripts=True,
+                 do_prescripts=True,
                  do_latexml=True,
                  overwrite=True,
                  bibtex_file=None,
@@ -248,6 +257,7 @@ class LaTeXMLSuite:
                  output_filename=None,
                  ccn_output_directory=None,
                  makefile_directories=None,
+                 pre_scripts=None,
                  post_scripts=None,
                  mode=None,
                  test=False,
@@ -272,13 +282,15 @@ class LaTeXMLSuite:
         self.ccn_tables_dir = self.ccn_output_directory / Path("tables")
         self.ccn_highcharts_dir = self.ccn_output_directory / Path("highcharts")
         self.makefile_directories = makefile_directories
+        self.pre_scripts = pre_scripts
         self.post_scripts = post_scripts
         self.platform_is_windows = platform_is_windows
         self.make_exe = make_exe
         self.include_graphs = include_graphs
         self.test = test
         self.do_make = do_make
-        self.do_scripts = do_scripts
+        self.do_prescripts = do_prescripts
+        self.do_postscripts = do_postscripts
         self.do_latexml = do_latexml
         if main_file_name is None:
             self.main_file_name = Path("main.tex")
@@ -311,6 +323,9 @@ class LaTeXMLSuite:
         if self.makefile_directories is not None and self.do_make:
             self.launch_makefiles()
 
+        if self.pre_scripts is not None and self.do_prescripts:
+            self.launch_scripts(self.pre_scripts)
+
         if self.mode == "none":
             # met none maken we de documenten niet, alleen de make files worden gerund
             return
@@ -332,8 +347,8 @@ class LaTeXMLSuite:
                 self.launch_latexml_post()
                 self.rename_and_clean_html()
                 self.clean_ccs()
-            if self.post_scripts is not None and self.do_scripts:
-                self.launch_post_scripts()
+            if self.post_scripts is not None and self.do_postscripts:
+                self.launch_scripts(self.post_scripts)
 
     def clean_ccs(self):
 
@@ -418,14 +433,14 @@ class LaTeXMLSuite:
 
             run_command(command=cleaner, terminal_colors=self.terminal_colors)
 
-    def launch_post_scripts(self):
+    def launch_scripts(self, scripts):
         """
         Loop over alle directories die een Makefile bevatten en lanceer het make commando
         """
         fc = self.terminal_colors.foreground_color
         bc = self.terminal_colors.background_color
         rs = self.terminal_colors.reset_colors
-        for script_filename in self.post_scripts:
+        for script_filename in scripts:
             cmd = []
             script = Path(script_filename)
             if self.test:
@@ -647,6 +662,7 @@ class Settings:
         self.ccn_output_directory = None
         self.makefile_directories = None
         self.post_scripts = None
+        self.pre_scripts = None
         self.output_directory = None
         self.output_directory_html = None
 
@@ -664,6 +680,7 @@ class Settings:
         self.ccn_output_directory = general_settings.get("ccn_output_directory", "ccn")
         self.makefile_directories = settings.get("makefiles")
         self.post_scripts = settings.get("postscripts")
+        self.pre_scripts = settings.get("prescripts")
         out_def = Path(self.main_name).with_suffix(".pdf")
         self.output_filename = general_settings.get("output_filename", out_def)
         if cache_settings is not None:
@@ -679,6 +696,7 @@ class Settings:
         _logger.debug(msgf.format("output_file_name", self.output_filename))
         _logger.debug(msgf.format("ccn_output_directory", self.ccn_output_directory))
         _logger.debug(msgf.format("makefile_directories", self.makefile_directories))
+        _logger.debug(msgf.format("prescripts", self.pre_scripts))
         _logger.debug(msgf.format("postscripts", self.post_scripts))
 
 
@@ -703,11 +721,16 @@ def main(args):
     else:
         platform_is_windows = False
 
+    if not args.doscripts:
+        args.do_prescripts = False
+        args.do_postscripts = False
+
     suite = LaTeXMLSuite(mode=args.mode,
                          test=args.test,
                          make_exe=args.make_exe,
                          do_make=args.do_make,
-                         do_scripts=args.do_scripts,
+                         do_postscripts=args.do_postscripts,
+                         do_prescripts=args.do_prescripts,
                          do_latexml=args.do_latexml,
                          overwrite=args.overwrite,
                          main_file_name=settings.main_name,
@@ -717,6 +740,7 @@ def main(args):
                          output_filename=settings.output_filename,
                          ccn_output_directory=settings.ccn_output_directory,
                          makefile_directories=settings.makefile_directories,
+                         pre_scripts=settings.pre_scripts,
                          post_scripts=settings.post_scripts,
                          include_graphs=args.include_graphs,
                          platform_is_windows=platform_is_windows,
