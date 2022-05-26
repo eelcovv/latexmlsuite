@@ -721,7 +721,7 @@ def main(args):
     else:
         platform_is_windows = False
 
-    if not args.doscripts:
+    if not args.do_scripts:
         args.do_prescripts = False
         args.do_postscripts = False
 
