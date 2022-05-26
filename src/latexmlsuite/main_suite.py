@@ -654,6 +654,7 @@ def run_command(command, shell=False, terminal_colors=None):
                 print(line.decode().strip())
             except UnicodeDecodeError as err:
                 _logger.warning(err)
+                _logger.warning(line)
 
 
 class Settings:
