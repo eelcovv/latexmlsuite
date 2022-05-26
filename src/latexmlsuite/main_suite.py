@@ -23,6 +23,8 @@ References:
 import argparse
 import codecs
 import datetime
+from colorama import Fore, Back
+from colorama.ansi import AnsiBack, AnsiFore, AnsiCodes
 import glob
 import logging
 import os
@@ -192,16 +194,22 @@ def copy_main_for_latexml(tex_input_file: Path, tex_output_file: Path,
         out_stream.write(tex_content_new)
 
 
-class BColors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+class TerminalColors:
+    def __init__(self, foreground_color=None, background_color=None, no_colors=False):
+        self.no_colors = no_colors
+        self.foreground_color = self.set_color(color_name=foreground_color, foreground=True)
+        self.background_color = self.set_color(color_name=background_color, foreground=False)
+
+    def set_color(self, color_name, foreground=True):
+        if color_name is not None and not self.no_colors:
+            if foreground:
+                color = getattr(AnsiFore, color_name)
+            else:
+                color = getattr(AnsiBack, color_name)
+        else:
+            color = ""
+
+        return color
 
 
 class LaTeXMLSuite:
@@ -223,9 +231,15 @@ class LaTeXMLSuite:
                  test=False,
                  merge_chapters=False,
                  include_graphs=False,
-                 platform_is_windows=False
+                 platform_is_windows=False,
+                 foreground_color=None,
+                 background_color=None,
+                 no_colors=False,
                  ):
 
+        self.terminal_colors = TerminalColors(foreground_color=foreground_color,
+                                              background_color=background_color,
+                                              no_colors=no_colors)
         self.output_filename = output_filename
         if ccn_output_directory is not None:
             self.ccn_output_directory = Path(ccn_output_directory)
@@ -351,8 +365,10 @@ class LaTeXMLSuite:
         """
         Hernoem alle html files met een prefix
         """
-        bc = BColors()
         html_files = glob.glob(f"{self.ccn_html_dir.as_posix()}/*.html")
+        fc = self.terminal_colors.foreground_color
+        bc = self.terminal_colors.background_color
+
         for html_file in html_files:
             html = Path(html_file)
 
@@ -363,7 +379,7 @@ class LaTeXMLSuite:
             new_base = "_".join([prefix, html.stem + html.suffix])
             new_html = html.parent / Path(new_base)
 
-            print(f"{bc.OKBLUE}mv {html} {new_html}{bc.OKBLUE}")
+            print(f"{fc}{bc}mv {html} {new_html}")
             if not self.test:
                 shutil.move(html.as_posix(), new_html.as_posix())
 
@@ -383,8 +399,8 @@ class LaTeXMLSuite:
         """
         Loop over alle directories die een Makefile bevatten en lanceer het make commando
         """
-        bc = BColors()
-
+        fc = self.terminal_colors.foreground_color
+        bc = self.terminal_colors.background_color
         for script_filename in self.post_scripts:
             cmd = []
             script = Path(script_filename)
@@ -397,7 +413,7 @@ class LaTeXMLSuite:
                 script = script.with_suffix(".sh")
                 cmd.append("sh")
 
-            print(f"{bc.OKBLUE}cd {script.parent}{bc.ENDC}", end="; ")
+            print(f"{fc}{bc}cd {script.parent}", end="; ")
             with path.Path(script.parent):
                 script_base = Path(script.stem + script.suffix)
                 if not Path(script_base).exists():
@@ -411,6 +427,8 @@ class LaTeXMLSuite:
         """
         Loop over alle directories die een Makefile bevatten en lanceer het make commando
         """
+        fc = self.terminal_colors.foreground_color
+        bc = self.terminal_colors.background_color
 
         for makefile_dir in self.makefile_directories:
             cmd = []
@@ -419,9 +437,9 @@ class LaTeXMLSuite:
             cmd.append(self.make_exe)
             if self.mode == "clean":
                 cmd.append("clean")
-            print(f"cd {makefile_dir}", end="; ")
+            print(f"{fc}{bc}cd {makefile_dir}", end="; ")
             with path.Path(makefile_dir):
-                run_command(command=cmd)
+                run_command(command=cmd, terminal_colors=self.terminal_colors)
 
     def launch_latexmk_for_html(self):
         """
@@ -448,7 +466,7 @@ class LaTeXMLSuite:
         else:
             _logger.debug(f"No update need for {self.main_file_name} compared to {main_file}")
 
-        run_command(command=cmd)
+        run_command(command=cmd, terminal_colors=self.terminal_colors)
 
     def copy_pdf(self):
         """
@@ -489,7 +507,7 @@ class LaTeXMLSuite:
             cmd.append(f"--preload=hyperref.sty")
             cmd.append(f"{references}")
 
-            run_command(command=cmd)
+            run_command(command=cmd, terminal_colors=self.terminal_colors)
             self.updated_references = True
         else:
             _logger.debug(f"No update need for {self.xml_refs} compared to {references}")
@@ -513,7 +531,7 @@ class LaTeXMLSuite:
         cmd.append(f"{main_file.as_posix()}")
 
         if update_target_compared_to_source(main_file, xml_file) or self.updated_references:
-            run_command(command=cmd)
+            run_command(command=cmd, terminal_colors=self.terminal_colors)
         else:
             _logger.debug(f"No update need for {xml_file} compared to {main_file}")
 
@@ -544,7 +562,7 @@ class LaTeXMLSuite:
             cmd.append("--splitat")
             cmd.append("chapter")
 
-        run_command(command=cmd)
+        run_command(command=cmd, terminal_colors=self.terminal_colors)
 
     def launch_latexmk(self):
 
@@ -570,10 +588,15 @@ class LaTeXMLSuite:
         run_command(command=cmd)
 
 
-def run_command(command, shell=False):
-    bc = BColors()
+def run_command(command, shell=False, terminal_colors=None):
+    if terminal_colors is None:
+        fc = ""
+        bc = ""
+    else:
+        fc = terminal_colors.foreground_color
+        bc = terminal_colors.background_color
     if command[0] != "echo":
-        print(f"{bc.OKBLUE}" + " ".join(command) + f"{bc.ENDC}")
+        print(f"{fc}{bc}" + " ".join(command))
     try:
         process = subprocess.Popen(command,
                                    stdout=subprocess.PIPE,
