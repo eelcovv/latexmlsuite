@@ -650,7 +650,10 @@ def run_command(command, shell=False, terminal_colors=None):
         _logger.warning(f"Failed for '{command}' with error:\n{err}")
     else:
         for line in iter(process.stdout.readline, b''):
-            print(line.decode().strip())
+            try:
+                print(line.decode().strip())
+            except UnicodeDecodeError as err:
+                _logger.warning(err)
 
 
 class Settings:
