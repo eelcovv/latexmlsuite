@@ -610,13 +610,18 @@ class LaTeXMLSuite:
         else:
             raise AssertionError("Alleen aanroepen voor all en clean")
 
-        run_command(command=cmd)
+        run_command(command=cmd, terminal_colors=self.terminal_colors)
 
 
 def run_command(command, shell=False, terminal_colors=None):
-    fc = terminal_colors.foreground_color
-    bc = terminal_colors.background_color
-    rs = terminal_colors.reset_colors
+    if terminal_colors is not None:
+        fc = terminal_colors.foreground_color
+        bc = terminal_colors.background_color
+        rs = terminal_colors.reset_colors
+    else:
+        fc = ""
+        bc = ""
+        rs = ""
     if command[0] != "echo":
         print(f"{fc}{bc}" + " ".join(command) + f"{rs}")
     try:
