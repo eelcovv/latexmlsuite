@@ -192,6 +192,18 @@ def copy_main_for_latexml(tex_input_file: Path, tex_output_file: Path,
         out_stream.write(tex_content_new)
 
 
+class BColors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
 class LaTeXMLSuite:
     def __init__(self,
                  main_file_name="main",
@@ -339,6 +351,7 @@ class LaTeXMLSuite:
         """
         Hernoem alle html files met een prefix
         """
+        bc = BColors()
         html_files = glob.glob(f"{self.ccn_html_dir.as_posix()}/*.html")
         for html_file in html_files:
             html = Path(html_file)
@@ -350,7 +363,7 @@ class LaTeXMLSuite:
             new_base = "_".join([prefix, html.stem + html.suffix])
             new_html = html.parent / Path(new_base)
 
-            print(f"mv {html} {new_html}")
+            print(f"{bc.OKBLUE}mv {html} {new_html}{bc.OKBLUE}")
             if not self.test:
                 shutil.move(html.as_posix(), new_html.as_posix())
 
@@ -370,6 +383,7 @@ class LaTeXMLSuite:
         """
         Loop over alle directories die een Makefile bevatten en lanceer het make commando
         """
+        bc = BColors()
 
         for script_filename in self.post_scripts:
             cmd = []
@@ -383,7 +397,7 @@ class LaTeXMLSuite:
                 script = script.with_suffix(".sh")
                 cmd.append("sh")
 
-            print(f"cd {script.parent}", end="; ")
+            print(f"{bc.OKBLUE}cd {script.parent}{bc.ENDC}", end="; ")
             with path.Path(script.parent):
                 script_base = Path(script.stem + script.suffix)
                 if not Path(script_base).exists():
@@ -557,8 +571,9 @@ class LaTeXMLSuite:
 
 
 def run_command(command, shell=False):
+    bc = BColors()
     if command[0] != "echo":
-        print(" ".join(command))
+        print(f"{bc.OKBLUE}" + " ".join(command) + f"{bc.ENDC}")
     try:
         process = subprocess.Popen(command,
                                    stdout=subprocess.PIPE,
