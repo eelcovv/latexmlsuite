@@ -128,11 +128,11 @@ def parse_args(args):
     )
     parser.add_argument(
         "--foreground_color", help="Voorgrondkleur van commando's",
-        choices=FOREGROUND_COLOR_OPTIONS, default="RED"
+        choices=FOREGROUND_COLOR_OPTIONS, default="GREEN"
     )
     parser.add_argument(
         "--background_color", help="Achtergrondkleur van commando's",
-        choices=BACKGROUND_COLOR_OPTIONS, default="WHITE"
+        choices=BACKGROUND_COLOR_OPTIONS, default=None
     )
     parser.add_argument(
         "--test", help="Doe een droge run, dus laat alleen commando's zien",
