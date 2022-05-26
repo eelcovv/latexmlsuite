@@ -651,7 +651,7 @@ def run_command(command, shell=False, terminal_colors=None):
     else:
         for line in iter(process.stdout.readline, b''):
             try:
-                print(line.decode().strip())
+                print(line.decode('utf-8').strip())
             except UnicodeDecodeError as err:
                 _logger.warning(err)
                 _logger.warning(line)
