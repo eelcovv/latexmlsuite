@@ -2,12 +2,6 @@
 Python scriptje om een csv file van de iris data te maken
 
 Dit scriptje hoef je niet meer te draaien omdat de csv data bij de git repo gestopt is
-Binnen de CBS omgeving werkt het niet vanwege de proxy (je haalt de data van een server), maar
-thuis zou je kunnen doen:
-
-python maak_iris_data.py
-
-als je de files 'afmetingen_bloem.csv' en 'afmetingen_bloem.tex' wilt reproduceren.
 """
 import logging
 

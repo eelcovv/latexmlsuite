@@ -99,7 +99,7 @@ def main():
     make_bar_plot(data_df=geometry_df, im_name=image_name.as_posix(), y_label=y_label)
 
     # nu schrijven we de dataframe nog weg als json voor ccn
-    ccn_out_dir = Path("../../ccn/highcharts/hoofdstuk2/Fig_2_2_2")
+    ccn_out_dir = Path("highcharts/hoofdstuk2/Fig_2_2_2")
     ccn_out_dir.mkdir(exist_ok=True, parents=True)
     CBSHighChart(
         data=geometry_df,
@@ -107,7 +107,7 @@ def main():
         xlabel=geometry_df.index.name,
         ylabel=y_label,
         y_lim=(0, 7),
-        y_tick_interval=1,
+        y_tick_interval="1",
         title="2.2.2 Gemiddelde afmeting per bloemonderdeel",
         output_file_name=image_name.stem,
         output_directory=ccn_out_dir.as_posix(),

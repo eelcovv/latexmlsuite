@@ -3,14 +3,15 @@
 general:
   latex_main: main.tex
   bibtex_file: references.bib
-  output_filename: voorbeeld_publicatie.pdf
+  output_filename: voorbeeld_cbs_publicatie.pdf
   ccn_output_directory: ccn
   merge_html: false
-# deze sectie bevat alle directories die een Makefile hebben om de plaatjes of tabellen te maken
 makefiles:
   - "figures/iris"
-  - "figures/iris_via_hc"
-  - "tables"
+  - "tables" 
+postscripts:
+  - "figures/iris/sync_htmls.ps1"
+  - "figures/iris_via_hc/sync_htmls.ps1"
 cache:
   output_directory: out
   output_html_directory: out_html
