@@ -210,9 +210,9 @@ def copy_main_for_latexml(tex_input_file: Path, tex_output_file: Path,
 
     options = ""
     if not include_graphics:
-        options += "nographs,notables,nohyperrefs"
+        options += ",nographs,notables,nohyperrefs"
     else:
-        options += "nohyperrefs"
+        options += ",nohyperrefs"
     cbsdocs = "]{cbsdocs}"
 
     tex_content_new = re.sub(cbsdocs, options + cbsdocs, tex_content)
