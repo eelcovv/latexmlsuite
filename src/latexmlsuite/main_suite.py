@@ -335,6 +335,7 @@ class LaTeXMLSuite:
             self.mode = mode
 
         # zorg dat de ccn directory wel aan het begin bestaat
+        _logger.info(f"Maak output directory {self.ccn_highcharts_dir}")
         self.ccn_highcharts_dir.mkdir(exist_ok=True, parents=True)
 
     def run(self):
