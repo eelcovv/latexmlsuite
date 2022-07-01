@@ -498,7 +498,8 @@ class LaTeXMLSuite:
             print(f"{fc}{bc}cd {makefile_dir}{rs}", end="; ")
             with path.Path(makefile_dir) as pp:
                 make_result = run_command(command=cmd, terminal_colors=self.terminal_colors)
-                if not check_make_was_clean(make_result=make_result) and highcharts.exists():
+                if not check_make_was_clean(make_result=make_result) and highcharts.exists() \
+                        and self.mode != "clean":
                     # als we de make file inderdaad gedraaid hebben en we hebben een highcharts
                     # directory, sync deze dan met de ccn output directory
                     sync_cmd = self.make_highcharts_sync_command(parent_path=pp)
