@@ -334,6 +334,9 @@ class LaTeXMLSuite:
         else:
             self.mode = mode
 
+        # zorg dat de ccn directory wel aan het begin bestaat
+        self.ccn_highcharts_dir.mkdir(exist_ok=True, parents=True)
+
     def run(self):
 
         if self.makefile_directories is not None and self.do_make:
