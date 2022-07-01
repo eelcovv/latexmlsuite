@@ -68,6 +68,17 @@ _logger = logging.getLogger(__name__)
 # API allowing them to be called directly from the terminal as a CLI
 # executable/script.
 
+def check_make_was_clean(make_result):
+    make_was_clean = True
+    try:
+        first_line = make_result[0]
+    except IndexError:
+        pass
+    else:
+        if "Nothing to be done" not in first_line:
+            make_was_clean = False
+    return make_was_clean
+
 
 def parse_args(args):
     """Parse command line parameters
@@ -254,6 +265,7 @@ class LaTeXMLSuite:
                  bibtex_file=None,
                  output_directory=None,
                  output_directory_html=None,
+                 output_directory_highcharts=None,
                  output_filename=None,
                  ccn_output_directory=None,
                  makefile_directories=None,
@@ -280,7 +292,6 @@ class LaTeXMLSuite:
         self.ccn_html_dir = self.ccn_output_directory / Path("html")
         self.overwrite = overwrite
         self.ccn_tables_dir = self.ccn_output_directory / Path("tables")
-        self.ccn_highcharts_dir = self.ccn_output_directory / Path("highcharts")
         self.makefile_directories = makefile_directories
         self.pre_scripts = pre_scripts
         self.post_scripts = post_scripts
@@ -308,6 +319,11 @@ class LaTeXMLSuite:
             self.output_directory_html = Path("out_html")
         else:
             self.output_directory_html = Path(output_directory_html)
+
+        if output_directory_highcharts is None:
+            self.ccn_highcharts_dir = self.ccn_output_directory / Path("highcharts")
+        else:
+            self.ccn_highcharts_dir = self.ccn_output_directory / Path(output_directory_highcharts)
 
         self.xml_refs = None
         self.updated_references = False
@@ -470,6 +486,8 @@ class LaTeXMLSuite:
         bc = self.terminal_colors.background_color
         rs = self.terminal_colors.reset_colors
 
+        highcharts = Path(self.ccn_highcharts_dir.stem)
+
         for makefile_dir in self.makefile_directories:
             cmd = []
             if self.test:
@@ -478,8 +496,57 @@ class LaTeXMLSuite:
             if self.mode == "clean":
                 cmd.append("clean")
             print(f"{fc}{bc}cd {makefile_dir}{rs}", end="; ")
-            with path.Path(makefile_dir):
-                run_command(command=cmd, terminal_colors=self.terminal_colors)
+            with path.Path(makefile_dir) as pp:
+                make_result = run_command(command=cmd, terminal_colors=self.terminal_colors)
+                if not check_make_was_clean(make_result=make_result) and highcharts.exists():
+                    # als we de make file inderdaad gedraaid hebben en we hebben een highcharts
+                    # directory, sync deze dan met de ccn output directory
+                    sync_cmd = self.make_highcharts_sync_command(parent_path=pp)
+                    run_command(command=sync_cmd, terminal_colors=self.terminal_colors)
+
+    def make_highcharts_sync_command(self, parent_path):
+        """
+        Maak een commando om een highcharts directory te synchroniseren met de ccn output
+
+        Args:
+            parent_path: Path
+                Het pad van de makefile, hebben we nodig om te kijken hoeveel niveau we omhoog
+                moeten
+
+        """
+        sync_cmd = []
+        this_parent = Path(parent_path)
+        n_up_dir = Path(".")
+        while this_parent != Path(""):
+            n_up_dir = Path("..") / n_up_dir
+            this_parent = this_parent.parent
+
+        highcharts_basedir = Path(self.ccn_highcharts_dir.stem)
+        if self.test:
+            sync_cmd.append("echo")
+
+        # gebruik robocopy op windows, rsync op linux
+        if self.platform_is_windows:
+            sync_cmd.append("Robocopy.exe")
+        else:
+            sync_cmd.append("rsync")
+            sync_cmd.append("-arv")
+
+        # paden toevoegen
+        sync_cmd.append(highcharts_basedir.as_posix() + "/")
+        sync_cmd.append((n_up_dir / self.ccn_highcharts_dir).as_posix())
+
+        # robocopy switches of rsync switches om json te excluden
+        if self.platform_is_windows:
+            sync_cmd.append("/E")
+            sync_cmd.append("/NDL")
+            sync_cmd.append("/XF")
+        else:
+            sync_cmd.append("--exclude")
+
+        sync_cmd.append("*.json")
+
+        return sync_cmd
 
     def launch_latexmk_for_html(self):
         """
@@ -637,6 +704,7 @@ def run_command(command, shell=False, terminal_colors=None):
         fc = ""
         bc = ""
         rs = ""
+    all_output_lines = list()
     if command[0] != "echo":
         print(f"{fc}{bc}" + " ".join(command) + f"{rs}")
     try:
@@ -651,10 +719,15 @@ def run_command(command, shell=False, terminal_colors=None):
     else:
         for line in iter(process.stdout.readline, b''):
             try:
-                print(line.decode('utf-8').strip())
+                clean_line = line.decode('utf-8').strip()
             except UnicodeDecodeError as err:
                 _logger.warning(err)
                 _logger.warning(line)
+            else:
+                print(clean_line)
+                all_output_lines.append(clean_line)
+
+    return all_output_lines
 
 
 class Settings:
