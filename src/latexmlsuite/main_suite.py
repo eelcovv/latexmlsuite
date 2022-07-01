@@ -75,7 +75,7 @@ def check_make_was_clean(make_result):
     except IndexError:
         pass
     else:
-        if "Nothing to be done" not in first_line:
+        if not ("Nothing to be done" in first_line or "Er is niets te doen" in first_line):
             make_was_clean = False
     return make_was_clean
 
