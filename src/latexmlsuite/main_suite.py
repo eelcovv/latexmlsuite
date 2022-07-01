@@ -505,6 +505,7 @@ class LaTeXMLSuite:
                         and self.mode != "clean":
                     # als we de make file inderdaad gedraaid hebben en we hebben een highcharts
                     # directory, sync deze dan met de ccn output directory
+                    self.ccn_output_directory.mkdir(exist_ok=True)
                     sync_cmd = self.make_highcharts_sync_command(parent_path=pp)
                     run_command(command=sync_cmd, terminal_colors=self.terminal_colors)
 
