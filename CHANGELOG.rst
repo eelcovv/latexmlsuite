@@ -10,7 +10,7 @@ Version 0.3.3
 Version 0.3.2
 ===========
 
-- Script getest op powerhsell en werkt
+- Script getest op PowerShell en werkt
 - Post shell scripts toegevoegd
 - Lanceren powershell en shell getest en werkt
 
