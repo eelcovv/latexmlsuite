@@ -5,7 +5,7 @@ Changelog
 Version 0.3.3
 ===========
 
-- highcharts directories worden automatisch na 'make' gesynchroniseerd met ccn output
+- highcharts en tabellen directories worden automatisch na 'make' gesynchroniseerd met ccn output
 
 Version 0.3.2
 ===========
