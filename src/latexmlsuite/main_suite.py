@@ -266,6 +266,7 @@ class LaTeXMLSuite:
                  output_directory=None,
                  output_directory_html=None,
                  output_directory_highcharts=None,
+                 output_directory_tabellen=None,
                  output_filename=None,
                  ccn_output_directory=None,
                  makefile_directories=None,
@@ -291,7 +292,6 @@ class LaTeXMLSuite:
             self.ccn_output_directory = Path("ccn")
         self.ccn_html_dir = self.ccn_output_directory / Path("html")
         self.overwrite = overwrite
-        self.ccn_tables_dir = self.ccn_output_directory / Path("tables")
         self.makefile_directories = makefile_directories
         self.pre_scripts = pre_scripts
         self.post_scripts = post_scripts
@@ -325,6 +325,11 @@ class LaTeXMLSuite:
         else:
             self.ccn_highcharts_dir = self.ccn_output_directory / Path(output_directory_highcharts)
 
+        if output_directory_tabellen is None:
+            self.ccn_tables_dir = self.ccn_output_directory / Path("tabellen")
+        else:
+            self.ccn_tables_dir = self.ccn_output_directory / Path(output_directory_tabellen)
+
         self.xml_refs = None
         self.updated_references = False
         self.merge_chapters = merge_chapters
@@ -337,6 +342,10 @@ class LaTeXMLSuite:
         # zorg dat de ccn directory wel aan het begin bestaat
         _logger.info(f"Maak output directory {self.ccn_highcharts_dir}")
         self.ccn_highcharts_dir.mkdir(exist_ok=True, parents=True)
+        self.ccn_tables_dir.mkdir(exist_ok=True, parents=True)
+
+        # deze directories proberen we te synchroniseren
+        self.synchronise_directories = [self.ccn_highcharts_dir, self.ccn_tables_dir]
 
     def run(self):
 
@@ -490,9 +499,7 @@ class LaTeXMLSuite:
         bc = self.terminal_colors.background_color
         rs = self.terminal_colors.reset_colors
 
-        highcharts = Path(self.ccn_highcharts_dir.stem)
-
-        # voor we beginnen checken we eerst of de ccn directory wel bestaat
+        # voor we beginnen, checken we eerst of de ccn directory wel bestaat
         self.ccn_output_directory.mkdir(exist_ok=True)
 
         for makefile_dir in self.makefile_directories:
@@ -505,14 +512,17 @@ class LaTeXMLSuite:
             print(f"{fc}{bc}cd {makefile_dir}{rs}", end="; ")
             with path.Path(makefile_dir) as pp:
                 make_result = run_command(command=cmd, terminal_colors=self.terminal_colors)
-                if not check_make_was_clean(make_result=make_result) and highcharts.exists() \
-                        and self.mode != "clean":
-                    # als we de make file inderdaad gedraaid hebben en we hebben een highcharts
-                    # directory, sync deze dan met de ccn output directory
-                    sync_cmd = self.make_highcharts_sync_command(parent_path=pp)
-                    run_command(command=sync_cmd, terminal_colors=self.terminal_colors)
+                if not check_make_was_clean(make_result=make_result) and self.mode != "clean":
+                    for sync_dir in self.synchronise_directories:
+                        sync_dir_base = Path(sync_dir.stem)
+                        # als we de make file inderdaad gedraaid hebben en we hebben een sync
+                        # directory, sync deze dan met de ccn output directory
+                        if sync_dir_base.exists():
+                            sync_cmd = self.make_sync_command(parent_path=pp,
+                                                              synchronize_directory=sync_dir_base)
+                            run_command(command=sync_cmd, terminal_colors=self.terminal_colors)
 
-    def make_highcharts_sync_command(self, parent_path):
+    def make_sync_command(self, parent_path, synchronize_directory):
         """
         Maak een commando om een highcharts directory te synchroniseren met de ccn output
 
@@ -520,6 +530,8 @@ class LaTeXMLSuite:
             parent_path: Path
                 Het pad van de makefile, hebben we nodig om te kijken hoeveel niveau we omhoog
                 moeten
+            synchronize_directory: Path
+                Directory die we willen sychroniseren
 
         """
         sync_cmd = []
@@ -529,7 +541,8 @@ class LaTeXMLSuite:
             n_up_dir = Path("..") / n_up_dir
             this_parent = this_parent.parent
 
-        highcharts_basedir = Path(self.ccn_highcharts_dir.stem)
+        ccn_sync_dir = self.ccn_output_directory / synchronize_directory
+
         if self.test:
             sync_cmd.append("echo")
 
@@ -541,8 +554,8 @@ class LaTeXMLSuite:
             sync_cmd.append("-arv")
 
         # paden toevoegen
-        sync_cmd.append(highcharts_basedir.as_posix() + "/")
-        sync_cmd.append((n_up_dir / self.ccn_highcharts_dir).as_posix())
+        sync_cmd.append(synchronize_directory.as_posix() + "/")
+        sync_cmd.append((n_up_dir / ccn_sync_dir).as_posix())
 
         # robocopy switches of rsync switches om json te excluden
         if self.platform_is_windows:
@@ -832,7 +845,6 @@ def main(args):
                          foreground_color=args.foreground_color,
                          background_color=args.background_color,
                          use_terminal_colors=args.use_terminal_colors,
-
                          )
 
     suite.run()
