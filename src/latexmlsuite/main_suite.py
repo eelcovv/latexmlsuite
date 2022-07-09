@@ -359,7 +359,7 @@ class LaTeXMLSuite:
         if self.makefile_directories is not None and self.do_make:
             self.launch_makefiles()
 
-        if self.pre_scripts is not None and self.do_prescripts:
+        if self.pre_scripts is not None and self.do_prescripts and self.mode != "clean":
             self.launch_scripts(self.pre_scripts)
 
         if self.mode == "none":
