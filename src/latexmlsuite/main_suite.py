@@ -162,6 +162,11 @@ def parse_args(args):
         action="store_true", default=False
     )
     parser.add_argument(
+        "--force_html", help="Forceer het compileren van de html files met latexml, ook al is er"
+                             "geen update geweest",
+        action="store_true", default=False
+    )
+    parser.add_argument(
         "--mode", help="Welke type document wil je maken?",
         choices=MODES, default=DEFAULT_MODE
     )
@@ -280,11 +285,13 @@ class LaTeXMLSuite:
                  foreground_color=None,
                  background_color=None,
                  use_terminal_colors=False,
+                 force_html=False
                  ):
 
         self.terminal_colors = TerminalColors(foreground_color=foreground_color,
                                               background_color=background_color,
                                               use_terminal_colors=use_terminal_colors)
+        self.force_html = force_html
         self.output_filename = output_filename
         if ccn_output_directory is not None:
             self.ccn_output_directory = Path(ccn_output_directory)
@@ -658,7 +665,8 @@ class LaTeXMLSuite:
         cmd.append(f"--dest={xml_file.as_posix()}")
         cmd.append(f"{main_file.as_posix()}")
 
-        if update_target_compared_to_source(main_file, xml_file) or self.updated_references:
+        if update_target_compared_to_source(main_file, xml_file) or self.updated_references or \
+                self.force_html:
             run_command(command=cmd, terminal_colors=self.terminal_colors)
         else:
             _logger.debug(f"No update need for {xml_file} compared to {main_file}")
@@ -845,6 +853,7 @@ def main(args):
                          foreground_color=args.foreground_color,
                          background_color=args.background_color,
                          use_terminal_colors=args.use_terminal_colors,
+                         force_html=args.force_html
                          )
 
     suite.run()
