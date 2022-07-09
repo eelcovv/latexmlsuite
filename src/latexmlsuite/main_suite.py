@@ -347,9 +347,10 @@ class LaTeXMLSuite:
             self.mode = mode
 
         # zorg dat de ccn directory wel aan het begin bestaat
-        _logger.info(f"Maak output directory {self.ccn_highcharts_dir}")
-        self.ccn_highcharts_dir.mkdir(exist_ok=True, parents=True)
-        self.ccn_tables_dir.mkdir(exist_ok=True, parents=True)
+        if self.mode != "clean":
+            _logger.info(f"Maak output directory {self.ccn_highcharts_dir}")
+            self.ccn_highcharts_dir.mkdir(exist_ok=True, parents=True)
+            self.ccn_tables_dir.mkdir(exist_ok=True, parents=True)
 
         # deze directories proberen we te synchroniseren
         self.synchronise_directories = [self.ccn_highcharts_dir, self.ccn_tables_dir]
