@@ -380,9 +380,9 @@ class LaTeXMLSuite:
         if self.mode in ("html", "all"):
             if self.do_latexml:
                 # dit werkt alleen als je latexml geinstalleerd hebt.
-                self.launch_latexml_post()
                 self.rename_and_clean_html()
                 self.clean_ccs()
+                self.launch_latexml_post()
             if self.post_scripts is not None and self.do_postscripts:
                 self.launch_scripts(self.post_scripts)
 
