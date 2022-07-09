@@ -2,10 +2,11 @@
 Changelog
 =========
 
-Version 0.3.3
+Version 0.3.4
 ===========
 
 - highcharts en tabellen directories worden automatisch na 'make' gesynchroniseerd met ccn output
+- force_html optie toegevoegd om altijd latexml te runnen
 
 Version 0.3.2
 ===========
