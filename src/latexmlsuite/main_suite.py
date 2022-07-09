@@ -669,7 +669,7 @@ class LaTeXMLSuite:
                 self.force_html:
             run_command(command=cmd, terminal_colors=self.terminal_colors)
         else:
-            _logger.debug(f"No update need for {xml_file} compared to {main_file}")
+            _logger.info(f"No update need for {xml_file} compared to {main_file}")
 
     def launch_latexml_post(self):
         cmd = []
