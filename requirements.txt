@@ -1,10 +1,7 @@
+cbsplotlib
 colorama
-yaml
-pyyaml
-sphinx
-pytest
-pytest-cov
-seaborn
 matplotlib
 pandas
-setuptools
+path
+PyYAML
+seaborn
