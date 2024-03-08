@@ -173,18 +173,18 @@ def setup_logging(loglevel):
 
 def update_target_compared_to_source(source_file: Path, target_file: Path):
     """
-    Script om te kijken of een target file geupdated moet worden.
+    Script to check if we need to update the file
 
-    Een update vindt plaats als target nog niet bestaat, of als target ouder is dan source
+    Update if target does not exist yet, or if the target is older than the source
 
     Args:
         source_file: Path of str
-            Naam van de bron file
+            Name of the source file
         target_file: Path of str
-            Naam van de target file file
+            Name of the target file
 
     Returns: bool
-        vlag als target geupdated moet worden
+        Flag indicating that the target must be updated
     """
     source_file = Path(source_file)
     target_file = Path(target_file)
@@ -362,7 +362,7 @@ class LaTeXMLSuite:
                 self.launch_latexml()
         if self.mode in ("html", "all"):
             if self.do_latexml:
-                # dit werkt alleen als je latexml geinstalleerd hebt.
+                # This only works if you have installed latexml
                 self.launch_latexml_post()
                 self.rename_and_clean_html()
                 self.clean_ccs()
@@ -475,7 +475,7 @@ class LaTeXMLSuite:
             with path.Path(script.parent):
                 script_base = Path(script.stem + script.suffix)
                 if not Path(script_base).exists():
-                    _logger.warning(f"{script_base} does not excist")
+                    _logger.warning(f"{script_base} does not exist")
                 script_full = script_base.absolute()
                 cmd.append(script_full.as_posix())
 
@@ -521,7 +521,7 @@ class LaTeXMLSuite:
                 Het pad van de makefile, hebben we nodig om te kijken hoeveel niveau we omhoog
                 moeten
             synchronize_directory: Path
-                Directory die we willen sychroniseren
+                Directory we want to synchronise
 
         """
         sync_cmd = []
@@ -547,7 +547,7 @@ class LaTeXMLSuite:
         sync_cmd.append(synchronize_directory.as_posix() + "/")
         sync_cmd.append((n_up_dir / ccn_sync_dir).as_posix())
 
-        # robocopy switches of rsync switches om json te excluden
+        # Either Robocopy switches or rsync switches to exclude json
         if self.platform_is_windows:
             sync_cmd.append("/E")
             sync_cmd.append("/NDL")
@@ -780,13 +780,13 @@ class Settings:
             self.output_directory_html = "out_html"
 
     def report_settings(self):
-        msgf = "{:40s} : {}"
-        _logger.debug(msgf.format("main_file_name", self.main_name))
-        _logger.debug(msgf.format("output_file_name", self.output_filename))
-        _logger.debug(msgf.format("ccn_output_directory", self.ccn_output_directory))
-        _logger.debug(msgf.format("makefile_directories", self.makefile_directories))
-        _logger.debug(msgf.format("prescripts", self.pre_scripts))
-        _logger.debug(msgf.format("postscripts", self.post_scripts))
+        message = "{:40s} : {}"
+        _logger.debug(message.format("main_file_name", self.main_name))
+        _logger.debug(message.format("output_file_name", self.output_filename))
+        _logger.debug(message.format("ccn_output_directory", self.ccn_output_directory))
+        _logger.debug(message.format("makefile_directories", self.makefile_directories))
+        _logger.debug(message.format("prescripts", self.pre_scripts))
+        _logger.debug(message.format("postscripts", self.post_scripts))
 
 
 def main(args):

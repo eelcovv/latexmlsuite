@@ -5,23 +5,23 @@ Changelog
 Version 0.3.4
 ===========
 
-- highcharts en tabellen directories worden automatisch na 'make' gesynchroniseerd met ccn output
-- force_html optie toegevoegd om altijd latexml te runnen
+- highcharts and table directories are automatically synchronized with ccn output after 'make'
+- added force_html option to always run latexml
 
 Version 0.3.2
 ===========
 
-- Script getest op PowerShell en werkt
-- Post shell scripts toegevoegd
-- Lanceren powershell en shell getest en werkt
+-Script tested on PowerShell and works
+-Added post shell scripts
+-Launch powershell and shell tested and working
 
 Version 0.2
 ===========
 
-- Werkend voorbeeld onder examples toegevoegd
-- check update toegevoegd
+- Working example added under examples
+- check update added
 
 Version 0.1
 ===========
 
-- Eerste werkende versie om latex kopij om te zetten
+- First working version to convert latex copy
